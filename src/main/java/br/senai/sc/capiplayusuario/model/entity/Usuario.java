@@ -1,8 +1,9 @@
 package br.senai.sc.capiplayusuario.model.entity;
 
 import br.senai.sc.capiplayusuario.model.enumerator.Categoria;
-import br.senai.sc.capiplayusuario.usuario.projections.UsuarioDetalhesProjection;
+import br.senai.sc.capiplayusuario.usuario.projections.UsuarioComentarioProjection;
 import br.senai.sc.capiplayusuario.utils.GeradorUuidUtils;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -11,7 +12,7 @@ import java.util.List;
 
 @Entity
 @Data
-public class Usuario implements UsuarioDetalhesProjection {
+public class Usuario implements UsuarioComentarioProjection {
 
     @Id
     @Column(length = 36)
@@ -21,12 +22,12 @@ public class Usuario implements UsuarioDetalhesProjection {
     private String email;
     private String foto;
     private Date dataNascimento;
-
     @ManyToMany
+    @JoinTable(name = "usuario_canal",
+            joinColumns = @JoinColumn(name = "usuario_uuid"),
+            inverseJoinColumns = @JoinColumn(name = "canal_uuid"))
+    @JsonIgnore
     private List<Usuario> canaisInscritos;
-
-    @Enumerated(EnumType.STRING)
-    private List<Categoria> categorias;
 
     public Usuario() {
         this.uuid = GeradorUuidUtils.gerarUuid();

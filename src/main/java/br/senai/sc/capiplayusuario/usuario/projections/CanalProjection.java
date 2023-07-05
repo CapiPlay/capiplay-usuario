@@ -1,5 +1,7 @@
 package br.senai.sc.capiplayusuario.usuario.projections;
 
-public interface UsuarioDetalhesProjection {
+public interface CanalProjection {
     String getNome();
+    String getFoto();
+    String getEmail();
 }
