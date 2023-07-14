@@ -9,7 +9,7 @@ public class UsuarioDTO {
     private String nome;
     private String senha;
     private String email;
-    private String perfil;
+    private String perfil; // Apelido
     private String foto;
     private Date dataNascimento;
 }

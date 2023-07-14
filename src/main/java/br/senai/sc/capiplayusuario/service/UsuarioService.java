@@ -13,8 +13,8 @@ import java.util.List;
 public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
 
-    public Usuario salvar(Usuario usuario){
-        return usuarioRepository.save(usuario);
+    public void salvar(Usuario usuario){
+        usuarioRepository.save(usuario);
     }
 
     public Usuario buscarUm(String id){
@@ -29,5 +29,13 @@ public class UsuarioService {
 
     public void deletar(String id){
         usuarioRepository.deleteById(id);
+    }
+
+    public Usuario buscarPorEmail(String email) {
+        return usuarioRepository.findByEmail(email);
+    }
+
+    public Usuario buscarPorPerfil(String perfil) {
+        return usuarioRepository.findByPerfil(perfil);
     }
 }

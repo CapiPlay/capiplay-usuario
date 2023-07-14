@@ -16,7 +16,7 @@ public class Usuario implements UsuarioComentarioProjection {
     @Column(length = 36)
     private String uuid;
     private String nome;
-    private String perfil;
+    private String perfil; // Apelido
     private String senha;
     private String email;
     private String foto;
