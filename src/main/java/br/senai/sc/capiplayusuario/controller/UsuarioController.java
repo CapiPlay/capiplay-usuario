@@ -20,12 +20,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@AllArgsConstructor
 @RequestMapping("/api/usuario")
 @CrossOrigin(origins = "*")
 public class UsuarioController {
 
-    private final UsuarioService usuarioService;
+    @Autowired
+    private UsuarioService usuarioService;
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -50,9 +50,10 @@ public class UsuarioController {
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody LoginDTO loginDTO){
         var usernamePassword = new UsernamePasswordAuthenticationToken
-                (loginDTO.email(),
-                        loginDTO.senha());
-        Authentication auth = this.authenticationManager.authenticate(usernamePassword);
+                (loginDTO.email(), loginDTO.senha());
+        System.out.println(usernamePassword);
+        Authentication auth = authenticationManager.authenticate(usernamePassword);
+        System.out.println("Auth");
         return ResponseEntity.status(HttpStatus.OK).body(tokenService.generateToken((Usuario) auth.getPrincipal()));
     }
 
