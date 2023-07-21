@@ -16,6 +16,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -34,16 +35,14 @@ public class UsuarioController {
     private TokenService tokenService;
 
     @PostMapping("/cadastro")
-    public ResponseEntity<Boolean> criar(@RequestBody UsuarioDTO usuarioDTO) {
-        System.out.println("Cadastrando");
-        if (usuarioService.buscarPorPerfil(usuarioDTO.getPerfil()) != null||
+    public ResponseEntity<Boolean> criar(@ModelAttribute UsuarioDTO usuarioDTO,
+                                         @RequestParam("foto1") MultipartFile multipartFile) {
+        if (usuarioService.buscarPorPerfil(usuarioDTO.getPerfil()) != null ||
                 usuarioService.buscarPorEmail(usuarioDTO.getEmail()) != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
         }
-        Usuario usuario = new Usuario();
-        BeanUtils.copyProperties(usuarioDTO, usuario);
-        usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
-        usuarioService.salvar(usuario);
+        usuarioDTO.setFoto(usuarioService.salvarFoto(multipartFile));
+        usuarioService.salvar(usuarioDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(true);
     }
 
@@ -67,16 +66,17 @@ public class UsuarioController {
         return ResponseEntity.status(HttpStatus.OK).body(usuarioService.buscarTodos());
     }
 
+
     @PutMapping("/{id}")
-    public ResponseEntity<Boolean> editar(@PathVariable String id, @RequestBody UsuarioDTO usuarioDTO) {
+    public ResponseEntity<Boolean> editar(@PathVariable String id,
+                                          @ModelAttribute UsuarioDTO usuarioDTO,
+                                          @RequestParam("foto1") MultipartFile multipartFile) {
         if (usuarioService.buscarPorPerfil(usuarioDTO.getPerfil()) != null ||
                 usuarioService.buscarPorEmail(usuarioDTO.getEmail()) != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
         }
-        Usuario usuario = buscarUm(id).getBody();
-        assert usuario != null;
-        BeanUtils.copyProperties(usuarioDTO, usuario);
-        usuarioService.salvar(usuario);
+        usuarioDTO.setFoto(usuarioService.salvarFoto(multipartFile));
+        usuarioService.editar(usuarioDTO, id);
         return ResponseEntity.status(HttpStatus.OK).body(true);
     }
 
