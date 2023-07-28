@@ -6,6 +6,7 @@ import br.senai.sc.capiplayusuario.model.entity.Usuario;
 import br.senai.sc.capiplayusuario.security.TokenService;
 import br.senai.sc.capiplayusuario.service.UsuarioService;
 import br.senai.sc.capiplayusuario.usuario.projections.UsuarioComentarioProjection;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,12 +36,13 @@ public class UsuarioController {
     private TokenService tokenService;
 
     @PostMapping("/cadastro")
-    public ResponseEntity<Boolean> criar(@ModelAttribute UsuarioDTO usuarioDTO,
+    public ResponseEntity<Boolean> criar(@ModelAttribute @Valid UsuarioDTO usuarioDTO,
                                          @RequestParam("foto1") MultipartFile multipartFile) {
         if (usuarioService.buscarPorPerfil(usuarioDTO.getPerfil()) != null ||
                 usuarioService.buscarPorEmail(usuarioDTO.getEmail()) != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
         }
+        System.out.println(usuarioDTO.getSenha().equals(""));
         usuarioDTO.setFoto(usuarioService.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
         usuarioService.salvar(usuarioDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(true);
@@ -69,7 +71,7 @@ public class UsuarioController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Boolean> editar(@PathVariable String id,
-                                          @ModelAttribute UsuarioDTO usuarioDTO,
+                                          @ModelAttribute @Valid UsuarioDTO usuarioDTO,
                                           @RequestParam("foto1") MultipartFile multipartFile) {
         if (usuarioService.buscarPorPerfil(usuarioDTO.getPerfil()) != null ||
                 usuarioService.buscarPorEmail(usuarioDTO.getEmail()) != null) {

@@ -68,7 +68,7 @@ public class UsuarioService {
 
     public String salvarFoto(MultipartFile multipartFile, String nome) {
         String uuid = GeradorUuidUtils.gerarUuid();
-        File file = new File(diretorio + uuid + "_foto.jpeg");
+        File file = new File(diretorio + uuid + "_foto.png");
         try (FileOutputStream fos = new FileOutputStream(file)) {
             fos.write(multipartFile.getBytes());
 
@@ -85,7 +85,7 @@ public class UsuarioService {
 
                 bufferedImagemRedimensionada.getGraphics().drawImage(imagemRedimensionada, 0, 0, null);
 
-                ImageIO.write(bufferedImagemRedimensionada, "jpeg", file);
+                ImageIO.write(bufferedImagemRedimensionada, "png", file);
             }
 
         } catch (IOException e) {
@@ -129,6 +129,6 @@ public class UsuarioService {
 
         g2d.dispose();
 
-        ImageIO.write(imagemPadrao, "jpeg", arquivoImagemPadrao);
+        ImageIO.write(imagemPadrao, "png", arquivoImagemPadrao);
     }
 }
