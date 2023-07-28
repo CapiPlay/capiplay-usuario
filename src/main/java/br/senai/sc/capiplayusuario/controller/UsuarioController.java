@@ -41,7 +41,7 @@ public class UsuarioController {
                 usuarioService.buscarPorEmail(usuarioDTO.getEmail()) != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
         }
-        usuarioDTO.setFoto(usuarioService.salvarFoto(multipartFile));
+        usuarioDTO.setFoto(usuarioService.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
         usuarioService.salvar(usuarioDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(true);
     }
@@ -75,7 +75,7 @@ public class UsuarioController {
                 usuarioService.buscarPorEmail(usuarioDTO.getEmail()) != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
         }
-        usuarioDTO.setFoto(usuarioService.salvarFoto(multipartFile));
+        usuarioDTO.setFoto(usuarioService.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
         usuarioService.editar(usuarioDTO, id);
         return ResponseEntity.status(HttpStatus.OK).body(true);
     }
