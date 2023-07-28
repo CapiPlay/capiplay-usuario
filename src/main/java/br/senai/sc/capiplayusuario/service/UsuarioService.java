@@ -1,11 +1,14 @@
 package br.senai.sc.capiplayusuario.service;
 
 import br.senai.sc.capiplayusuario.exceptions.UsuarioInexistente;
+import br.senai.sc.capiplayusuario.infra.messaging.Publisher;
 import br.senai.sc.capiplayusuario.model.dto.UsuarioDTO;
 import br.senai.sc.capiplayusuario.model.entity.Usuario;
 import br.senai.sc.capiplayusuario.repository.UsuarioRepository;
+import br.senai.sc.capiplayusuario.usuario.events.UsuarioSalvoEvent;
 import br.senai.sc.capiplayusuario.utils.GeradorUuidUtils;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,17 +26,17 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-//@AllArgsConstructor
+@RequiredArgsConstructor
 public class UsuarioService {
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+
+    private final UsuarioRepository usuarioRepository;
 
     @Value("${diretorio-usuario}")
     public String diretorio;
 
     public void salvar(UsuarioDTO usuarioDTO){
         Usuario usuario = new Usuario();
-        criarUsuario(usuarioDTO,usuario);
+        criarUsuario(usuarioDTO, usuario);
     }
 
     public void editar(UsuarioDTO usuarioDTO, String id) {

@@ -1,12 +1,15 @@
 package br.senai.sc.capiplayusuario.controller;
 
+import br.senai.sc.capiplayusuario.infra.messaging.Publisher;
 import br.senai.sc.capiplayusuario.model.dto.LoginDTO;
 import br.senai.sc.capiplayusuario.model.dto.UsuarioDTO;
 import br.senai.sc.capiplayusuario.model.entity.Usuario;
 import br.senai.sc.capiplayusuario.security.TokenService;
 import br.senai.sc.capiplayusuario.service.UsuarioService;
+import br.senai.sc.capiplayusuario.usuario.events.UsuarioSalvoEvent;
 import br.senai.sc.capiplayusuario.usuario.projections.UsuarioComentarioProjection;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,21 +21,32 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.net.URI;
 import java.util.List;
+import java.util.UUID;
+
+import static org.springframework.http.ResponseEntity.created;
 
 @RestController
 @RequestMapping("/api/usuario")
 @CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class UsuarioController {
 
-    @Autowired
-    private UsuarioService usuarioService;
+    private final UsuarioService usuarioService;
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
 
-    @Autowired
-    private TokenService tokenService;
+    private final TokenService tokenService;
+
+    private final Publisher publisher;
+
+    @PostMapping("/salvar")
+    public ResponseEntity salvar() {
+        var id = UUID.randomUUID().toString();
+        publisher.publish(new UsuarioSalvoEvent(id, id));
+        return created(URI.create(id)).build();
+    }
 
     @PostMapping("/cadastro")
     public ResponseEntity<Boolean> criar(@ModelAttribute UsuarioDTO usuarioDTO,
