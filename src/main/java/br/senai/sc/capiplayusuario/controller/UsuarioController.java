@@ -1,10 +1,12 @@
 package br.senai.sc.capiplayusuario.controller;
 
+import br.senai.sc.capiplayusuario.infra.messaging.Publisher;
 import br.senai.sc.capiplayusuario.model.dto.LoginDTO;
 import br.senai.sc.capiplayusuario.model.dto.UsuarioDTO;
 import br.senai.sc.capiplayusuario.model.entity.Usuario;
 import br.senai.sc.capiplayusuario.security.TokenService;
 import br.senai.sc.capiplayusuario.service.UsuarioService;
+import br.senai.sc.capiplayusuario.usuario.events.UsuarioSalvoEvent;
 import br.senai.sc.capiplayusuario.usuario.projections.UsuarioComentarioProjection;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -19,7 +21,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.net.URI;
 import java.util.List;
+import java.util.Random;
+import java.util.UUID;
+
+import static org.springframework.http.ResponseEntity.created;
 
 @RestController
 @RequestMapping("/api/usuario")
@@ -34,6 +41,16 @@ public class UsuarioController {
 
     @Autowired
     private TokenService tokenService;
+
+    @Autowired
+    private Publisher publisher;
+
+    @PostMapping("/salvar")
+    public ResponseEntity salvar() {
+        var id = UUID.randomUUID().toString();
+        publisher.publish(new UsuarioSalvoEvent(id, "Teste " + new Random().nextInt()));
+        return created(URI.create(id)).build();
+    }
 
     @PostMapping("/cadastro")
     public ResponseEntity<Boolean> criar(@ModelAttribute @Valid UsuarioDTO usuarioDTO,
