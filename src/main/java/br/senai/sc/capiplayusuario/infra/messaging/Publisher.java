@@ -1,6 +1,5 @@
 package br.senai.sc.capiplayusuario.infra.messaging;
 
-import br.senai.sc.capiplayusuario.usuario.events.UsuarioSalvoEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
@@ -14,7 +13,7 @@ public class Publisher {
     private static final String EXCHANGE = "usuario-service";
 
     public void publish(Object event) {
-        var routingKey = event.getClass().getSimpleName();
+        var routingKey = event.getClass().getSimpleName(); // UsuarioSalvoEvent
         rabbitTemplate.convertAndSend(EXCHANGE, routingKey, event);
     }
 }
