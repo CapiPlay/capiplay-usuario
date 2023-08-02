@@ -13,13 +13,18 @@ public class UsuarioDTO {
     private String nome;
 
     @NotBlank
+    @NotNull
     private String senha;
+
     @NotNull
     @Email
     private String email;
+
     @NotNull
     private String perfil; // Apelido
+
     private String foto;
+
     @NotNull
     private Date dataNascimento;
 }

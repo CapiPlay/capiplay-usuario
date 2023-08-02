@@ -26,6 +26,7 @@ public class TokenService {
             return JWT.create().withIssuer("capiplay")
                     .withSubject(usuario.getNome())
                     .withExpiresAt(genExpirationDate())
+                    .withClaim("usuarioId", usuario.getUuid())
                     .sign(algorithm);
         } catch (JWTCreationException a) {
             throw new RuntimeException("Erro ao gerar token");

@@ -7,17 +7,13 @@ import br.senai.sc.capiplayusuario.model.entity.Usuario;
 import br.senai.sc.capiplayusuario.security.TokenService;
 import br.senai.sc.capiplayusuario.service.UsuarioService;
 import br.senai.sc.capiplayusuario.usuario.events.UsuarioSalvoEvent;
-import br.senai.sc.capiplayusuario.usuario.projections.UsuarioComentarioProjection;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -75,9 +71,9 @@ public class UsuarioController {
         return ResponseEntity.status(HttpStatus.OK).body(tokenService.generateToken((Usuario) auth.getPrincipal()));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Usuario> buscarUm(@PathVariable String id) {
-        return ResponseEntity.status(HttpStatus.OK).body(usuarioService.buscarUm(id));
+    @GetMapping("/detalhe")
+    public ResponseEntity<Usuario> detalhe(@RequestHeader String usuarioId) {
+        return ResponseEntity.status(HttpStatus.OK).body(usuarioService.buscarUm(usuarioId));
     }
 
     @GetMapping
