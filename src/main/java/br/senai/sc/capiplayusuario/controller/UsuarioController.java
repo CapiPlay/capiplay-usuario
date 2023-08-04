@@ -8,6 +8,7 @@ import br.senai.sc.capiplayusuario.security.TokenService;
 import br.senai.sc.capiplayusuario.service.UsuarioService;
 import br.senai.sc.capiplayusuario.usuario.events.UsuarioSalvoEvent;
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,18 +28,15 @@ import static org.springframework.http.ResponseEntity.created;
 @RestController
 @RequestMapping("/api/usuario")
 @CrossOrigin(origins = "*")
+@AllArgsConstructor
 public class UsuarioController {
 
-    @Autowired
     private UsuarioService usuarioService;
 
-    @Autowired
     private AuthenticationManager authenticationManager;
 
-    @Autowired
     private TokenService tokenService;
 
-    @Autowired
     private Publisher publisher;
 
     @PostMapping("/salvar")
@@ -51,14 +49,22 @@ public class UsuarioController {
     @PostMapping("/cadastro")
     public ResponseEntity<Boolean> criar(@ModelAttribute @Valid UsuarioDTO usuarioDTO,
                                          @RequestParam("foto1") MultipartFile multipartFile) {
+
         if (usuarioService.buscarPorPerfil(usuarioDTO.getPerfil()) != null ||
                 usuarioService.buscarPorEmail(usuarioDTO.getEmail()) != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
         }
-        System.out.println(usuarioDTO.getSenha().equals(""));
+
+        if (usuarioDTO.getPerfil().isEmpty()) {
+            usuarioDTO.setPerfil(usuarioService.nomePadrao(usuarioDTO.getEmail()));
+        }
+
         usuarioDTO.setFoto(usuarioService.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
-        usuarioService.salvar(usuarioDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(true);
+
+        if (usuarioService.salvar(usuarioDTO)) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(true);
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
     }
 
     @PostMapping("/login")
@@ -71,33 +77,43 @@ public class UsuarioController {
         return ResponseEntity.status(HttpStatus.OK).body(tokenService.generateToken((Usuario) auth.getPrincipal()));
     }
 
-    @GetMapping("/detalhe")
+    @GetMapping
     public ResponseEntity<Usuario> detalhe(@RequestHeader String usuarioId) {
+        usuarioId = usuarioId.replace("\"", "");
         return ResponseEntity.status(HttpStatus.OK).body(usuarioService.buscarUm(usuarioId));
     }
 
-    @GetMapping
-    public ResponseEntity<List<Usuario>> buscarTodos() {
-        return ResponseEntity.status(HttpStatus.OK).body(usuarioService.buscarTodos());
-    }
+//    @GetMapping
+//    public ResponseEntity<List<Usuario>> buscarTodos() {
+//        return ResponseEntity.status(HttpStatus.OK).body(usuarioService.buscarTodos());
+//    }
 
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Boolean> editar(@PathVariable String id,
+    @PutMapping
+    public ResponseEntity<Boolean> editar(@RequestHeader String usuarioId,
                                           @ModelAttribute @Valid UsuarioDTO usuarioDTO,
                                           @RequestParam("foto1") MultipartFile multipartFile) {
         if (usuarioService.buscarPorPerfil(usuarioDTO.getPerfil()) != null ||
                 usuarioService.buscarPorEmail(usuarioDTO.getEmail()) != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
         }
+        usuarioId = usuarioId.replace("\"", "");
+
+        if (usuarioDTO.getPerfil().isEmpty()) {
+            usuarioDTO.setPerfil(usuarioService.nomePadrao(usuarioDTO.getEmail()));
+        }
+
         usuarioDTO.setFoto(usuarioService.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
-        usuarioService.editar(usuarioDTO, id);
-        return ResponseEntity.status(HttpStatus.OK).body(true);
+        if (usuarioService.editar(usuarioDTO, usuarioId)) {
+            return ResponseEntity.status(HttpStatus.OK).body(true);
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletar(@PathVariable String id) {
-        usuarioService.deletar(id);
+    @DeleteMapping
+    public ResponseEntity<?> deletar(@RequestHeader String usuarioId) {
+        usuarioId = usuarioId.replace("\"", "");
+        usuarioService.deletar(usuarioId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

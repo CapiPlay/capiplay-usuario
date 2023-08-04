@@ -18,11 +18,21 @@ public class Usuario implements UsuarioComentarioProjection, UserDetails {
     @Id
     @Column(length = 36)
     private String uuid;
+
+    @Column(length = 30, nullable = false)
     private String nome;
+
     private String perfil; // Apelido
+
+    @Column(nullable = false)
     private String senha;
+
+    @Column(length = 50, nullable = false)
     private String email;
+
     private String foto;
+
+    @Column(nullable = false)
     private Date dataNascimento;
 
     public Usuario() {

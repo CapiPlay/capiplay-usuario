@@ -6,6 +6,7 @@ import br.senai.sc.capiplayusuario.model.entity.Usuario;
 import br.senai.sc.capiplayusuario.repository.UsuarioRepository;
 import br.senai.sc.capiplayusuario.utils.GeradorUuidUtils;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,9 +20,11 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.ZoneId;
+import java.util.*;
 import java.util.List;
-import java.util.Random;
-import java.util.UUID;
 
 @Service
 public class UsuarioService {
@@ -32,14 +35,14 @@ public class UsuarioService {
     @Value("${diretorio-usuario}")
     public String diretorio;
 
-    public void salvar(UsuarioDTO usuarioDTO) {
+    public boolean salvar(UsuarioDTO usuarioDTO) {
         Usuario usuario = new Usuario();
-        criarUsuario(usuarioDTO, usuario);
+        return criarUsuario(usuarioDTO, usuario);
     }
 
-    public void editar(UsuarioDTO usuarioDTO, String id) {
+    public boolean editar(UsuarioDTO usuarioDTO, String id) {
         Usuario usuario = buscarUm(id);
-        criarUsuario(usuarioDTO, usuario);
+        return criarUsuario(usuarioDTO, usuario);
     }
 
     public Usuario buscarUm(String id) {
@@ -60,10 +63,14 @@ public class UsuarioService {
         return usuarioRepository.findByEmail(email);
     }
 
-    private void criarUsuario(UsuarioDTO usuarioDTO, Usuario usuario) {
-        BeanUtils.copyProperties(usuarioDTO, usuario);
-        usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
-        usuarioRepository.save(usuario);
+    private boolean criarUsuario(UsuarioDTO usuarioDTO, Usuario usuario) {
+        if (!validaIdade(usuarioDTO.getDataNascimento())) {
+            BeanUtils.copyProperties(usuarioDTO, usuario);
+            usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
+            usuarioRepository.save(usuario);
+            return true;
+        }
+       return false;
     }
 
     public String salvarFoto(MultipartFile multipartFile, String nome) {
@@ -133,4 +140,41 @@ public class UsuarioService {
         ImageIO.write(imagemPadrao, "png", arquivoImagemPadrao);
     }
 
+    public String nomePadrao(String email) {
+        int indexArroba = email.indexOf('@');
+        if (indexArroba != -1) {
+            String nomePadrao = email.substring(0, indexArroba).trim();
+
+            String nomeFinal = nomePadrao;
+
+            Set<String> users = usuarioRepository.findAllByPerfil(nomePadrao);
+
+            for (int i = 0; users.contains(nomeFinal); i ++) {
+                nomeFinal = nomePadrao + "_" + i;
+            }
+            return nomeFinal;
+        } else {
+            return null;
+        }
+    }
+
+    public boolean validaIdade(Date dataNascimento) {
+
+        Calendar dataNascimentoCal = Calendar.getInstance();
+        dataNascimentoCal.setTime(dataNascimento);
+
+        Calendar dataAtualCal = Calendar.getInstance();
+
+        int idade = dataAtualCal.get(Calendar.YEAR) - dataNascimentoCal.get(Calendar.YEAR);
+
+
+        if (dataNascimentoCal.get(Calendar.MONTH) > dataAtualCal.get(Calendar.MONTH) ||
+                (dataNascimentoCal.get(Calendar.MONTH) == dataAtualCal.get(Calendar.MONTH) &&
+                        dataNascimentoCal.get(Calendar.DAY_OF_MONTH) > dataAtualCal.get(Calendar.DAY_OF_MONTH) ||
+                        dataNascimentoCal.get(Calendar.DAY_OF_MONTH) == dataAtualCal.get(Calendar.DAY_OF_MONTH))) {
+            idade--;
+        }
+
+        return idade > 6 && idade < 150;
+    }
 }
