@@ -5,19 +5,16 @@ import br.senai.sc.capiplayusuario.model.dto.LoginDTO;
 import br.senai.sc.capiplayusuario.model.dto.UsuarioDTO;
 import br.senai.sc.capiplayusuario.model.entity.Usuario;
 import br.senai.sc.capiplayusuario.security.TokenService;
+import br.senai.sc.capiplayusuario.service.EmailSenderService;
 import br.senai.sc.capiplayusuario.service.UsuarioService;
 import br.senai.sc.capiplayusuario.usuario.events.UsuarioSalvoEvent;
-import br.senai.sc.capiplayusuario.usuario.projections.UsuarioComentarioProjection;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -45,6 +42,9 @@ public class UsuarioController {
     @Autowired
     private Publisher publisher;
 
+    @Autowired
+    private EmailSenderService emailSenderService;
+
     @PostMapping("/salvar")
     public ResponseEntity salvar() {
         var id = UUID.randomUUID().toString();
@@ -54,11 +54,12 @@ public class UsuarioController {
 
     @PostMapping("/cadastro")
     public ResponseEntity<Boolean> criar(@ModelAttribute @Valid UsuarioDTO usuarioDTO,
-                                         @RequestParam("foto1") MultipartFile multipartFile) {
+                                         @RequestParam(value = "foto1", required = false)  MultipartFile multipartFile) {
         if (usuarioService.buscarPorPerfil(usuarioDTO.getPerfil()) != null ||
                 usuarioService.buscarPorEmail(usuarioDTO.getEmail()) != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
         }
+        emailSenderService.validEmail(usuarioDTO.getEmail(), "Valiação de Email");
         System.out.println(usuarioDTO.getSenha().equals(""));
         usuarioDTO.setFoto(usuarioService.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
         usuarioService.salvar(usuarioDTO);
