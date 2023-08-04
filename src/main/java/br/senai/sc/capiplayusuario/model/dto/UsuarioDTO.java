@@ -20,7 +20,7 @@ public class UsuarioDTO {
     @Email
     private String email;
 
-    @NotNull
+
     private String perfil; // Apelido
 
     private String foto;

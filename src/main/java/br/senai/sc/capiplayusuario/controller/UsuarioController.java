@@ -26,7 +26,6 @@ import static org.springframework.http.ResponseEntity.created;
 
 @RestController
 @RequestMapping("/api/usuario")
-@CrossOrigin(origins = "*")
 public class UsuarioController {
 
     @Autowired
@@ -50,13 +49,13 @@ public class UsuarioController {
 
     @PostMapping("/cadastro")
     public ResponseEntity<Boolean> criar(@ModelAttribute @Valid UsuarioDTO usuarioDTO,
-                                         @RequestParam("foto1") MultipartFile multipartFile) {
+                                         @RequestParam(value = "foto1", required = false) MultipartFile multipartFile) {
         if (usuarioService.buscarPorPerfil(usuarioDTO.getPerfil()) != null ||
                 usuarioService.buscarPorEmail(usuarioDTO.getEmail()) != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
         }
         System.out.println(usuarioDTO.getSenha().equals(""));
-        usuarioDTO.setFoto(usuarioService.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
+//        usuarioDTO.setFoto(usuarioService.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
         usuarioService.salvar(usuarioDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(true);
     }
