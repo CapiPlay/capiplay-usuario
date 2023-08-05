@@ -29,7 +29,6 @@ import static org.springframework.http.ResponseEntity.created;
 
 @RestController
 @RequestMapping("/api/usuario")
-@CrossOrigin(origins = "*")
 public class UsuarioController {
 
     @Autowired
@@ -64,8 +63,8 @@ public class UsuarioController {
                 usuarioService.buscarPorEmail(usuarioDTO.getEmail()) != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
         }
-
-        usuarioDTO.setFoto(usuarioService.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
+        System.out.println(usuarioDTO.getSenha().equals(""));
+        //usuarioDTO.setFoto(usuarioService.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
         Usuario usuario = usuarioService.salvar(usuarioDTO);
         emailSenderService.validEmail(usuario.getEmail(), "Valiação de Email", usuario.getUuid());
         usuario.setEnabled(false);
@@ -82,9 +81,9 @@ public class UsuarioController {
         return ResponseEntity.status(HttpStatus.OK).body(tokenService.generateToken((Usuario) auth.getPrincipal()));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Usuario> buscarUm(@PathVariable String id) {
-        return ResponseEntity.status(HttpStatus.OK).body(usuarioService.buscarUm(id));
+    @GetMapping("/detalhe")
+    public ResponseEntity<Usuario> detalhe(@RequestHeader String usuarioId) {
+        return ResponseEntity.status(HttpStatus.OK).body(usuarioService.buscarUm(usuarioId));
     }
 
     @GetMapping

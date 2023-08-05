@@ -79,6 +79,7 @@ public class UsuarioService {
             if (imagemOriginal == null) {
                 gerarFotoPadrao(nome, file);
             } else {
+
                 int larguraDesejada = 176;
                 int alturaDesejada = 176;
 
@@ -133,4 +134,5 @@ public class UsuarioService {
 
         ImageIO.write(imagemPadrao, "png", arquivoImagemPadrao);
     }
+
 }
