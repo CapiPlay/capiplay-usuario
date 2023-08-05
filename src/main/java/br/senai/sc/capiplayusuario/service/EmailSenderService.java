@@ -14,9 +14,9 @@ public class EmailSenderService {
     private JavaMailSender javaMailSender;
     private Environment environment;
 
-    public void validEmail(String toEmail, String subject) {
+    public void validEmail(String toEmail, String subject, String uuid) {
         try {
-            String verificationLink = createVerificationLink();
+            String verificationLink = createVerificationLink(uuid);
 
             // Load the HTML file from the static folder
             String htmlContent = "<html><body><h1>Email Verification</h1><p>Clique <a href='" + verificationLink + "'>aqui</a> para verificar o email:</p></body></html>";
@@ -40,8 +40,8 @@ public class EmailSenderService {
         }
     }
 
-    private String createVerificationLink() {
-        String baseUrl = environment.getProperty("app.baseurl"); // Set the base URL of your application
-        return baseUrl + "/verify.html"; // Adjust the URL path accordingly
+    private String createVerificationLink(String uuid) {
+        String baseUrl = environment.getProperty("app.baseurl");
+        return baseUrl + "api/usuario/verifyEmail/" + uuid;
     }
 }

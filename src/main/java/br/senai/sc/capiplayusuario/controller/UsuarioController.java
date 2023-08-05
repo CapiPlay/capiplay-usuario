@@ -10,6 +10,8 @@ import br.senai.sc.capiplayusuario.service.UsuarioService;
 import br.senai.sc.capiplayusuario.usuario.events.UsuarioSalvoEvent;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -45,6 +47,9 @@ public class UsuarioController {
     @Autowired
     private EmailSenderService emailSenderService;
 
+    @Autowired
+    private ResourceLoader resourceLoader;
+
     @PostMapping("/salvar")
     public ResponseEntity salvar() {
         var id = UUID.randomUUID().toString();
@@ -59,10 +64,11 @@ public class UsuarioController {
                 usuarioService.buscarPorEmail(usuarioDTO.getEmail()) != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
         }
-        emailSenderService.validEmail(usuarioDTO.getEmail(), "Valiação de Email");
-        System.out.println(usuarioDTO.getSenha().equals(""));
+
         usuarioDTO.setFoto(usuarioService.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
-        usuarioService.salvar(usuarioDTO);
+        Usuario usuario = usuarioService.salvar(usuarioDTO);
+        emailSenderService.validEmail(usuario.getEmail(), "Valiação de Email", usuario.getUuid());
+        usuario.setEnabled(false);
         return ResponseEntity.status(HttpStatus.CREATED).body(true);
     }
 
@@ -84,6 +90,29 @@ public class UsuarioController {
     @GetMapping
     public ResponseEntity<List<Usuario>> buscarTodos() {
         return ResponseEntity.status(HttpStatus.OK).body(usuarioService.buscarTodos());
+    }
+
+    @GetMapping("/verifyEmail/{uuid}")
+    public ResponseEntity<Resource> verifyEmail(@PathVariable String uuid){
+        try {
+            System.out.println(uuid);
+            for (Usuario u:usuarioService.buscarTodos()) {
+                if (u.getUuid().equals(uuid)){
+                    u.setEnabled(true);
+                    usuarioService.alterarCampos(u);
+                } else {
+                    return ResponseEntity.notFound().build();
+                }
+            }
+            Resource resource = resourceLoader.getResource("classpath:static/verify.html");
+            if (resource.exists()) {
+                return ResponseEntity.ok(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
     }
 
 
