@@ -5,10 +5,17 @@ import br.senai.sc.capiplayusuario.model.dto.LoginDTO;
 import br.senai.sc.capiplayusuario.model.dto.UsuarioDTO;
 import br.senai.sc.capiplayusuario.model.entity.Usuario;
 import br.senai.sc.capiplayusuario.security.TokenService;
+import br.senai.sc.capiplayusuario.service.EmailSenderService;
 import br.senai.sc.capiplayusuario.service.UsuarioService;
 import br.senai.sc.capiplayusuario.usuario.events.UsuarioSalvoEvent;
 import jakarta.validation.Valid;
+
 import lombok.AllArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -37,6 +44,10 @@ public class UsuarioController {
 
     private Publisher publisher;
 
+    private EmailSenderService emailSenderService;
+
+    private ResourceLoader resourceLoader;
+
     @PostMapping("/salvar")
     public ResponseEntity salvar() {
         var id = UUID.randomUUID().toString();
@@ -46,6 +57,7 @@ public class UsuarioController {
 
     @PostMapping("/cadastro")
     public ResponseEntity<Boolean> criar(@ModelAttribute @Valid UsuarioDTO usuarioDTO,
+
                                          @RequestParam("foto1") MultipartFile multipartFile) {
 
 
@@ -56,9 +68,14 @@ public class UsuarioController {
         usuarioDTO.setFoto(service.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
 
         if (service.salvar(usuarioDTO)) {
+            System.out.println(usuarioDTO.getSenha().equals(""));
+            Usuario usuario = usuarioService.salvar(usuarioDTO);
+            emailSenderService.validEmail(usuario.getEmail(), "Valiação de Email", usuario.getUuid());
+            usuario.setEnabled(false);
             return ResponseEntity.status(HttpStatus.CREATED).body(true);
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
+     
     }
 
     @PostMapping("/login")
@@ -77,10 +94,28 @@ public class UsuarioController {
         return ResponseEntity.status(HttpStatus.OK).body(service.buscarUm(usuarioId));
     }
 
-//    @GetMapping
-//    public ResponseEntity<List<Usuario>> buscarTodos() {
-//        return ResponseEntity.status(HttpStatus.OK).body(usuarioService.buscarTodos());
-//    }
+    @GetMapping("/verifyEmail/{uuid}")
+    public ResponseEntity<Resource> verifyEmail(@PathVariable String uuid){
+        try {
+            System.out.println(uuid);
+            for (Usuario u:usuarioService.buscarTodos()) {
+                if (u.getUuid().equals(uuid)){
+                    u.setEnabled(true);
+                    usuarioService.alterarCampos(u);
+                } else {
+                    return ResponseEntity.notFound().build();
+                }
+            }
+            Resource resource = resourceLoader.getResource("classpath:static/verify.html");
+            if (resource.exists()) {
+                return ResponseEntity.ok(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
+    }
 
 
     @PutMapping

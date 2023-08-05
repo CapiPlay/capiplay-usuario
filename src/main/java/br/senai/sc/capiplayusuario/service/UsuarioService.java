@@ -5,8 +5,10 @@ import br.senai.sc.capiplayusuario.model.dto.UsuarioDTO;
 import br.senai.sc.capiplayusuario.model.entity.Usuario;
 import br.senai.sc.capiplayusuario.repository.UsuarioRepository;
 import br.senai.sc.capiplayusuario.utils.GeradorUuidUtils;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +28,8 @@ import java.time.Period;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.List;
+import java.util.Random;
+
 
 @Service
 public class UsuarioService {
@@ -36,12 +40,13 @@ public class UsuarioService {
     @Value("${diretorio-usuario}")
     public String diretorio;
 
-    public boolean salvar(UsuarioDTO usuarioDTO) {
+
+    public Usuario salvar(UsuarioDTO usuarioDTO) {
         Usuario usuario = new Usuario();
         return criarUsuario(usuarioDTO, usuario);
     }
 
-    public boolean editar(UsuarioDTO usuarioDTO, String id) {
+    public void editar(UsuarioDTO usuarioDTO, String id) {
         Usuario usuario = buscarUm(id);
         return criarUsuario(usuarioDTO, usuario);
     }
@@ -64,14 +69,20 @@ public class UsuarioService {
         return usuarioRepository.findByEmail(email);
     }
 
-    private boolean criarUsuario(UsuarioDTO usuarioDTO, Usuario usuario) {
+
+    private Usuario criarUsuario(UsuarioDTO usuarioDTO, Usuario usuario) {
         if (!validaIdade(usuarioDTO.getDataNascimento())) {
             BeanUtils.copyProperties(usuarioDTO, usuario);
             usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
-            usuarioRepository.save(usuario);
-            return false;
+            
+            return usuarioRepository.save(usuario);;
         }
-        return false;
+        return null;
+    }
+
+
+    public void alterarCampos(Usuario usuario){
+        usuarioRepository.save(usuario);
     }
 
     public String salvarFoto(MultipartFile multipartFile, String nome) {

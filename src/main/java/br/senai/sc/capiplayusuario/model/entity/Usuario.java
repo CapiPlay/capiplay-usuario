@@ -2,14 +2,15 @@ package br.senai.sc.capiplayusuario.model.entity;
 
 import br.senai.sc.capiplayusuario.usuario.projections.UsuarioComentarioProjection;
 import br.senai.sc.capiplayusuario.utils.GeradorUuidUtils;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.sql.Date;
 import java.util.Collection;
-import java.util.List;
 
 @Entity
 @Data
@@ -34,6 +35,7 @@ public class Usuario implements UsuarioComentarioProjection, UserDetails {
 
     @Column(nullable = false)
     private Date dataNascimento;
+    private boolean isEnabled;
 
     public Usuario() {
         this.uuid = GeradorUuidUtils.gerarUuid();
@@ -66,11 +68,6 @@ public class Usuario implements UsuarioComentarioProjection, UserDetails {
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
         return true;
     }
 }

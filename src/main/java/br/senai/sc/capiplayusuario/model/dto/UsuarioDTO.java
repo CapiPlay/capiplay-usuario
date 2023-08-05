@@ -23,6 +23,7 @@ public class UsuarioDTO {
     @Size(max = 60, message = "Email execede o tamanho máximo")
     private String email;
 
+
     @Size(max = 20, message = "Apelido execede o tamanho máximo")
     private String perfil; // Apelido
 
