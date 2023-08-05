@@ -9,7 +9,6 @@ import br.senai.sc.capiplayusuario.service.UsuarioService;
 import br.senai.sc.capiplayusuario.usuario.events.UsuarioSalvoEvent;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
-import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
@@ -31,7 +29,7 @@ import static org.springframework.http.ResponseEntity.created;
 @AllArgsConstructor
 public class UsuarioController {
 
-    private UsuarioService usuarioService;
+    private UsuarioService service;
 
     private AuthenticationManager authenticationManager;
 
@@ -50,25 +48,21 @@ public class UsuarioController {
     public ResponseEntity<Boolean> criar(@ModelAttribute @Valid UsuarioDTO usuarioDTO,
                                          @RequestParam("foto1") MultipartFile multipartFile) {
 
-        if (usuarioService.buscarPorPerfil(usuarioDTO.getPerfil()) != null ||
-                usuarioService.buscarPorEmail(usuarioDTO.getEmail()) != null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
-        }
 
         if (usuarioDTO.getPerfil().isEmpty()) {
-            usuarioDTO.setPerfil(usuarioService.nomePadrao(usuarioDTO.getEmail()));
+            usuarioDTO.setPerfil(service.nomePadrao(usuarioDTO.getEmail()));
         }
 
-        usuarioDTO.setFoto(usuarioService.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
+        usuarioDTO.setFoto(service.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
 
-        if (usuarioService.salvar(usuarioDTO)) {
+        if (service.salvar(usuarioDTO)) {
             return ResponseEntity.status(HttpStatus.CREATED).body(true);
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginDTO loginDTO){
+    public ResponseEntity<String> login(@RequestBody LoginDTO loginDTO) {
         var usernamePassword = new UsernamePasswordAuthenticationToken
                 (loginDTO.email(), loginDTO.senha());
         System.out.println(usernamePassword);
@@ -80,7 +74,7 @@ public class UsuarioController {
     @GetMapping
     public ResponseEntity<Usuario> detalhe(@RequestHeader String usuarioId) {
         usuarioId = usuarioId.replace("\"", "");
-        return ResponseEntity.status(HttpStatus.OK).body(usuarioService.buscarUm(usuarioId));
+        return ResponseEntity.status(HttpStatus.OK).body(service.buscarUm(usuarioId));
     }
 
 //    @GetMapping
@@ -93,18 +87,18 @@ public class UsuarioController {
     public ResponseEntity<Boolean> editar(@RequestHeader String usuarioId,
                                           @ModelAttribute @Valid UsuarioDTO usuarioDTO,
                                           @RequestParam("foto1") MultipartFile multipartFile) {
-        if (usuarioService.buscarPorPerfil(usuarioDTO.getPerfil()) != null ||
-                usuarioService.buscarPorEmail(usuarioDTO.getEmail()) != null) {
+        if (service.buscarPorPerfil(usuarioDTO.getPerfil()) != null ||
+                service.buscarPorEmail(usuarioDTO.getEmail()) != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
         }
         usuarioId = usuarioId.replace("\"", "");
 
         if (usuarioDTO.getPerfil().isEmpty()) {
-            usuarioDTO.setPerfil(usuarioService.nomePadrao(usuarioDTO.getEmail()));
+            usuarioDTO.setPerfil(service.nomePadrao(usuarioDTO.getEmail()));
         }
 
-        usuarioDTO.setFoto(usuarioService.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
-        if (usuarioService.editar(usuarioDTO, usuarioId)) {
+        usuarioDTO.setFoto(service.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
+        if (service.editar(usuarioDTO, usuarioId)) {
             return ResponseEntity.status(HttpStatus.OK).body(true);
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
@@ -113,7 +107,7 @@ public class UsuarioController {
     @DeleteMapping
     public ResponseEntity<?> deletar(@RequestHeader String usuarioId) {
         usuarioId = usuarioId.replace("\"", "");
-        usuarioService.deletar(usuarioId);
+        service.deletar(usuarioId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

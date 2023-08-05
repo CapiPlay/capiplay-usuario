@@ -10,6 +10,7 @@ import lombok.Data;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -68,9 +69,9 @@ public class UsuarioService {
             BeanUtils.copyProperties(usuarioDTO, usuario);
             usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
             usuarioRepository.save(usuario);
-            return true;
+            return false;
         }
-       return false;
+        return false;
     }
 
     public String salvarFoto(MultipartFile multipartFile, String nome) {
@@ -149,7 +150,7 @@ public class UsuarioService {
 
             Set<String> users = usuarioRepository.findAllByPerfil(nomePadrao);
 
-            for (int i = 0; users.contains(nomeFinal); i ++) {
+            for (int i = 0; users.contains(nomeFinal); i++) {
                 nomeFinal = nomePadrao + "_" + i;
             }
             return nomeFinal;
@@ -177,4 +178,6 @@ public class UsuarioService {
 
         return idade > 6 && idade < 150;
     }
+
+
 }

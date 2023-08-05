@@ -9,7 +9,7 @@ import java.sql.Date;
 public class UsuarioDTO {
 
     @NotNull
-    @Size(max = 30, message = "Nome execede o tamanho máximo")
+    @Size(max = 50, message = "Nome execede o tamanho máximo")
     private String nome;
 
     @NotBlank
@@ -20,7 +20,7 @@ public class UsuarioDTO {
     @NotNull
     @NotEmpty
     @Email
-    @Size(max = 50, message = "Email execede o tamanho máximo")
+    @Size(max = 60, message = "Email execede o tamanho máximo")
     private String email;
 
     @Size(max = 20, message = "Apelido execede o tamanho máximo")

@@ -19,7 +19,7 @@ public class Usuario implements UsuarioComentarioProjection, UserDetails {
     @Column(length = 36)
     private String uuid;
 
-    @Column(length = 30, nullable = false)
+    @Column(length = 50, nullable = false)
     private String nome;
 
     private String perfil; // Apelido
@@ -27,7 +27,7 @@ public class Usuario implements UsuarioComentarioProjection, UserDetails {
     @Column(nullable = false)
     private String senha;
 
-    @Column(length = 50, nullable = false)
+    @Column(length = 60, nullable = false)
     private String email;
 
     private String foto;
