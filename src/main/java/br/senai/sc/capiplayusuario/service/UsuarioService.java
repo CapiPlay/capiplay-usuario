@@ -5,7 +5,6 @@ import br.senai.sc.capiplayusuario.model.dto.UsuarioDTO;
 import br.senai.sc.capiplayusuario.model.entity.Usuario;
 import br.senai.sc.capiplayusuario.repository.UsuarioRepository;
 import br.senai.sc.capiplayusuario.utils.GeradorUuidUtils;
-import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,7 +20,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Random;
-import java.util.UUID;
 
 @Service
 public class UsuarioService {
@@ -32,9 +30,9 @@ public class UsuarioService {
     @Value("${diretorio-usuario}")
     public String diretorio;
 
-    public void salvar(UsuarioDTO usuarioDTO) {
+    public Usuario salvar(UsuarioDTO usuarioDTO) {
         Usuario usuario = new Usuario();
-        criarUsuario(usuarioDTO, usuario);
+        return criarUsuario(usuarioDTO, usuario);
     }
 
     public void editar(UsuarioDTO usuarioDTO, String id) {
@@ -60,9 +58,13 @@ public class UsuarioService {
         return usuarioRepository.findByEmail(email);
     }
 
-    private void criarUsuario(UsuarioDTO usuarioDTO, Usuario usuario) {
+    private Usuario criarUsuario(UsuarioDTO usuarioDTO, Usuario usuario) {
         BeanUtils.copyProperties(usuarioDTO, usuario);
         usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
+        return usuarioRepository.save(usuario);
+    }
+
+    public void alterarCampos(Usuario usuario){
         usuarioRepository.save(usuario);
     }
 
