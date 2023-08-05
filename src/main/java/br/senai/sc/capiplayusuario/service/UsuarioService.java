@@ -46,9 +46,9 @@ public class UsuarioService {
         return criarUsuario(usuarioDTO, usuario);
     }
 
-    public void editar(UsuarioDTO usuarioDTO, String id) {
+    public Boolean editar(UsuarioDTO usuarioDTO, String id) {
         Usuario usuario = buscarUm(id);
-        return criarUsuario(usuarioDTO, usuario);
+        return criarUsuario(usuarioDTO, usuario) != null;
     }
 
     public Usuario buscarUm(String id) {
@@ -75,7 +75,7 @@ public class UsuarioService {
             BeanUtils.copyProperties(usuarioDTO, usuario);
             usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
             
-            return usuarioRepository.save(usuario);;
+            return usuarioRepository.save(usuario);
         }
         return null;
     }

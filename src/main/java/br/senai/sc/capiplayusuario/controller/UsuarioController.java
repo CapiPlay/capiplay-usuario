@@ -67,9 +67,9 @@ public class UsuarioController {
 
         usuarioDTO.setFoto(service.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
 
-        if (service.salvar(usuarioDTO)) {
+        if (service.salvar(usuarioDTO) != null) {
             System.out.println(usuarioDTO.getSenha().equals(""));
-            Usuario usuario = usuarioService.salvar(usuarioDTO);
+            Usuario usuario = service.salvar(usuarioDTO);
             emailSenderService.validEmail(usuario.getEmail(), "Valiação de Email", usuario.getUuid());
             usuario.setEnabled(false);
             return ResponseEntity.status(HttpStatus.CREATED).body(true);
@@ -98,10 +98,10 @@ public class UsuarioController {
     public ResponseEntity<Resource> verifyEmail(@PathVariable String uuid){
         try {
             System.out.println(uuid);
-            for (Usuario u:usuarioService.buscarTodos()) {
+            for (Usuario u:service.buscarTodos()) {
                 if (u.getUuid().equals(uuid)){
                     u.setEnabled(true);
-                    usuarioService.alterarCampos(u);
+                    service.alterarCampos(u);
                 } else {
                     return ResponseEntity.notFound().build();
                 }
