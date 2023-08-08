@@ -65,8 +65,8 @@ public class UsuarioService {
         usuarioRepository.deleteById(id);
     }
 
-    public Usuario buscarPorEmail(String email) {
-        return usuarioRepository.findByEmail(email);
+    public boolean existePorEmail(String email) {
+        return usuarioRepository.existsByEmail(email);
     }
 
 
@@ -110,8 +110,8 @@ public class UsuarioService {
         return file.getAbsolutePath();
     }
 
-    public Usuario buscarPorPerfil(String perfil) {
-        return usuarioRepository.findByPerfil(perfil);
+    public boolean existePorPerfil(String perfil) {
+        return usuarioRepository.existsByPerfil(perfil);
     }
 
     public static void gerarFotoPadrao(String nomeUsuario, File arquivoImagemPadrao) throws IOException {

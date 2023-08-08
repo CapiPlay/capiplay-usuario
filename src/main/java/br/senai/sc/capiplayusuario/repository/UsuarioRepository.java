@@ -11,8 +11,9 @@ import java.util.Set;
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, String> {
 
+    boolean existsByEmail(String email);
+    boolean existsByPerfil(String perfil);
     Usuario findByEmail(String email);
-    Usuario findByPerfil(String perfil);
 
     @Query(value = "select perfil from db_capiplay_usuario.usuario where lower(perfil) like lower(concat(:perfil,'%'))", nativeQuery = true)
     Set<String> findAllByPerfil(String perfil);
