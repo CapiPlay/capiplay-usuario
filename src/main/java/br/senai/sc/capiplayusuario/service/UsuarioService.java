@@ -71,7 +71,7 @@ public class UsuarioService {
 
 
     private Usuario criarUsuario(UsuarioDTO usuarioDTO, Usuario usuario) {
-        if (!validaIdade(usuarioDTO.getDataNascimento())) {
+        if (validaIdade(usuarioDTO.getDataNascimento())) {
             BeanUtils.copyProperties(usuarioDTO, usuario);
             usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
             

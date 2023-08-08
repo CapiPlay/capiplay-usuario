@@ -57,9 +57,7 @@ public class UsuarioController {
 
     @PostMapping("/cadastro")
     public ResponseEntity<Boolean> criar(@ModelAttribute @Valid UsuarioDTO usuarioDTO,
-
                                          @RequestParam("foto1") MultipartFile multipartFile) {
-
 
         if (usuarioDTO.getPerfil().isEmpty()) {
             usuarioDTO.setPerfil(service.nomePadrao(usuarioDTO.getEmail()));
@@ -68,14 +66,11 @@ public class UsuarioController {
         usuarioDTO.setFoto(service.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
 
         if (service.salvar(usuarioDTO) != null) {
-            System.out.println(usuarioDTO.getSenha().equals(""));
-            Usuario usuario = service.salvar(usuarioDTO);
-            emailSenderService.validEmail(usuario.getEmail(), "Valiação de Email", usuario.getUuid());
-            usuario.setEnabled(false);
             return ResponseEntity.status(HttpStatus.CREATED).body(true);
+        } else {
+            System.out.println("else");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
         }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
-     
     }
 
     @PostMapping("/login")
