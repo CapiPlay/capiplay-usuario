@@ -8,6 +8,7 @@ import br.senai.sc.capiplayusuario.security.TokenService;
 import br.senai.sc.capiplayusuario.service.EmailSenderService;
 import br.senai.sc.capiplayusuario.service.UsuarioService;
 import br.senai.sc.capiplayusuario.usuario.events.UsuarioSalvoEvent;
+import br.senai.sc.capiplayusuario.usuario.projections.DetalhesUsuarioProjection;
 import jakarta.validation.Valid;
 
 import lombok.AllArgsConstructor;
@@ -84,7 +85,7 @@ public class UsuarioController {
     }
 
     @GetMapping
-    public ResponseEntity<Usuario> detalhe(@RequestHeader String usuarioId) {
+    public ResponseEntity<DetalhesUsuarioProjection> detalhe(@RequestHeader String usuarioId) {
         usuarioId = usuarioId.replace("\"", "");
         return ResponseEntity.status(HttpStatus.OK).body(service.buscarUm(usuarioId));
     }
@@ -117,8 +118,8 @@ public class UsuarioController {
     public ResponseEntity<Boolean> editar(@RequestHeader String usuarioId,
                                           @ModelAttribute @Valid UsuarioDTO usuarioDTO,
                                           @RequestParam(name="foto1", required = false) MultipartFile multipartFile) {
-        if (service.buscarPorPerfil(usuarioDTO.getPerfil()) != null ||
-                service.buscarPorEmail(usuarioDTO.getEmail()) != null) {
+        if (service.existePorPerfil(usuarioDTO.getPerfil()) ||
+                service.existePorEmail(usuarioDTO.getEmail())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
         }
         usuarioId = usuarioId.replace("\"", "");
