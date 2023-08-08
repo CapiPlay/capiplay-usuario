@@ -89,25 +89,20 @@ public class UsuarioService {
         String uuid = GeradorUuidUtils.gerarUuid();
         File file = new File(diretorio + uuid + "_foto.png");
         try (FileOutputStream fos = new FileOutputStream(file)) {
-            fos.write(multipartFile.getBytes());
-
-            BufferedImage imagemOriginal = ImageIO.read(file);
-
-            if (imagemOriginal == null) {
+            try{
+                fos.write(multipartFile.getBytes());
+            } catch (Exception e){
                 gerarFotoPadrao(nome, file);
-            } else {
-
-                int larguraDesejada = 176;
-                int alturaDesejada = 176;
-
-                Image imagemRedimensionada = imagemOriginal.getScaledInstance(larguraDesejada, alturaDesejada, Image.SCALE_SMOOTH);
-                BufferedImage bufferedImagemRedimensionada = new BufferedImage(larguraDesejada, alturaDesejada, BufferedImage.TYPE_INT_RGB);
-
-                bufferedImagemRedimensionada.getGraphics().drawImage(imagemRedimensionada, 0, 0, null);
-
-                ImageIO.write(bufferedImagemRedimensionada, "png", file);
+                return file.getAbsolutePath();
             }
 
+            BufferedImage imagemOriginal = ImageIO.read(file);
+            int larguraDesejada = 176;
+            int alturaDesejada = 176;
+            Image imagemRedimensionada = imagemOriginal.getScaledInstance(larguraDesejada, alturaDesejada, Image.SCALE_SMOOTH);
+            BufferedImage bufferedImagemRedimensionada = new BufferedImage(larguraDesejada, alturaDesejada, BufferedImage.TYPE_INT_RGB);
+            bufferedImagemRedimensionada.getGraphics().drawImage(imagemRedimensionada, 0, 0, null);
+            ImageIO.write(bufferedImagemRedimensionada, "png", file);
         } catch (IOException e) {
             e.printStackTrace();
             return "Deu erro";

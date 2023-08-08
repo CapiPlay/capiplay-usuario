@@ -57,7 +57,7 @@ public class UsuarioController {
 
     @PostMapping("/cadastro")
     public ResponseEntity<Boolean> criar(@ModelAttribute @Valid UsuarioDTO usuarioDTO,
-                                         @RequestParam("foto1") MultipartFile multipartFile) {
+                                         @RequestParam(value = "foto1", required = false) MultipartFile multipartFile) {
 
         if (usuarioDTO.getPerfil().isEmpty()) {
             usuarioDTO.setPerfil(service.nomePadrao(usuarioDTO.getEmail()));
@@ -116,7 +116,7 @@ public class UsuarioController {
     @PutMapping
     public ResponseEntity<Boolean> editar(@RequestHeader String usuarioId,
                                           @ModelAttribute @Valid UsuarioDTO usuarioDTO,
-                                          @RequestParam("foto1") MultipartFile multipartFile) {
+                                          @RequestParam(name="foto1", required = false) MultipartFile multipartFile) {
         if (service.buscarPorPerfil(usuarioDTO.getPerfil()) != null ||
                 service.buscarPorEmail(usuarioDTO.getEmail()) != null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
