@@ -1,5 +1,6 @@
 package br.senai.sc.capiplayusuario.model.entity;
 
+import br.senai.sc.capiplayusuario.usuario.projections.DetalhesUsuarioProjection;
 import br.senai.sc.capiplayusuario.usuario.projections.UsuarioComentarioProjection;
 import br.senai.sc.capiplayusuario.utils.GeradorUuidUtils;
 import jakarta.persistence.Column;
@@ -14,7 +15,7 @@ import java.util.Collection;
 
 @Entity
 @Data
-public class Usuario implements UsuarioComentarioProjection, UserDetails {
+public class Usuario implements UsuarioComentarioProjection, DetalhesUsuarioProjection, UserDetails {
 
     @Id
     @Column(length = 36)

@@ -1,20 +1,28 @@
 package br.senai.sc.capiplayusuario.service;
 
+
 import br.senai.sc.capiplayusuario.exceptions.CadastroInvalidoException;
 import br.senai.sc.capiplayusuario.exceptions.EmailEmUsoException;
 import br.senai.sc.capiplayusuario.exceptions.UsuarioInexistenteException;
+
+import br.senai.sc.capiplayusuario.exceptions.UsuarioInexistente;
+import br.senai.sc.capiplayusuario.model.dto.EditarUsuarioCommand;
+
 import br.senai.sc.capiplayusuario.model.dto.UsuarioDTO;
 import br.senai.sc.capiplayusuario.model.entity.Usuario;
 import br.senai.sc.capiplayusuario.repository.UsuarioRepository;
 import br.senai.sc.capiplayusuario.utils.GeradorUuidUtils;
 
+
 import org.springframework.beans.BeanUtils;
+
+import jakarta.validation.Valid;
+
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -25,6 +33,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import java.util.Random;
+
+import static org.springframework.beans.BeanUtils.copyProperties;
 
 
 @Service
@@ -37,15 +47,16 @@ public class UsuarioService {
     public String diretorio;
 
 
-    public Usuario salvar(UsuarioDTO usuarioDTO) {
+    public Usuario salvar(UsuarioDTO usuarioDTO, byte[] bytes) {
         Usuario usuario = new Usuario();
+        usuario.setFoto(salvarFoto(bytes, usuarioDTO.getPerfil()));
         return criarUsuario(usuarioDTO, usuario);
     }
 
-    public Boolean editar(UsuarioDTO usuarioDTO, String id) {
-        Usuario usuario = buscarUm(id);
-        return criarUsuario(usuarioDTO, usuario) != null;
-    }
+//    public Boolean editar(UsuarioEditDTO usuarioDTO, String id) {
+//        Usuario usuario = buscarUm(id);
+//        return criarUsuario(usuarioDTO, usuario) != null;
+//    }
 
     public Usuario buscarUm(String id) {
         return usuarioRepository
@@ -61,16 +72,20 @@ public class UsuarioService {
         usuarioRepository.deleteById(id);
     }
 
-    public Usuario buscarPorEmail(String email) {
-        return usuarioRepository.findByEmail(email);
+    public boolean existePorEmail(String email) {
+        return usuarioRepository.existsByEmail(email);
     }
-
 
     private Usuario criarUsuario(UsuarioDTO usuarioDTO, Usuario usuario) {
         if (validaIdade(usuarioDTO.getDataNascimento())) {
-            BeanUtils.copyProperties(usuarioDTO, usuario);
+            if (existePorPerfil(usuarioDTO.getPerfil()) ||
+                    existePorEmail(usuarioDTO.getEmail())) {
+                return null;
+            }
+            copyProperties(usuarioDTO, usuario);
             usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
             usuario.setEnabled(true);
+
             try {
                 return usuarioRepository.save(usuario);
             } catch (DataIntegrityViolationException e) {
@@ -83,22 +98,38 @@ public class UsuarioService {
         return null;
     }
 
+//    private Usuario criarUsuario(UsuarioEditDTO usuarioDTO, Usuario usuario) {
+//        if (existePorPerfil(usuarioDTO.getPerfil())) {
+//            return null;
+//        }
+//        copyProperties(usuarioDTO, usuario);
+//        usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
+//        usuario.setEnabled(true);
+//        return usuarioRepository.save(usuario);
+//    }
 
     public void alterarCampos(Usuario usuario){
         usuarioRepository.save(usuario);
     }
 
-    public String salvarFoto(MultipartFile multipartFile, String nome) {
+    public String salvarFoto(byte[] foto, String nome) {
         String uuid = GeradorUuidUtils.gerarUuid();
         File file = new File(diretorio + uuid + "_foto.png");
         try (FileOutputStream fos = new FileOutputStream(file)) {
-            try{
-                fos.write(multipartFile.getBytes());
-            } catch (Exception e){
+
+            if(foto==null||foto.length == 0){
                 gerarFotoPadrao(nome, file);
             }
 
+            fos.write(foto);
+
             BufferedImage imagemOriginal = ImageIO.read(file);
+
+            if (imagemOriginal == null) {
+                gerarFotoPadrao(nome, file);
+                return file.getAbsolutePath();
+            }
+
             int larguraDesejada = 176;
             int alturaDesejada = 176;
             Image imagemRedimensionada = imagemOriginal.getScaledInstance(larguraDesejada, alturaDesejada, Image.SCALE_SMOOTH);
@@ -112,8 +143,8 @@ public class UsuarioService {
         return file.getName();
     }
 
-    public Usuario buscarPorPerfil(String perfil) {
-        return usuarioRepository.findByPerfil(perfil);
+    public boolean existePorPerfil(String perfil) {
+        return usuarioRepository.existsByPerfil(perfil);
     }
 
     public static void gerarFotoPadrao(String nomeUsuario, File arquivoImagemPadrao) throws IOException {
@@ -150,6 +181,7 @@ public class UsuarioService {
     }
 
     public String nomePadrao(String email) {
+        System.out.println(email);
         int indexArroba = email.indexOf('@');
         if (indexArroba != -1) {
             String nomePadrao = email.substring(0, indexArroba).trim();
@@ -188,4 +220,18 @@ public class UsuarioService {
     }
 
 
+    public void handle(@Valid EditarUsuarioCommand cmd) {
+        Usuario usuario = buscarUm(cmd.getId());
+
+        if (existePorPerfil(cmd.getPerfil())) {
+            throw new IllegalArgumentException("Nome de usuário já está em uso"); // TODO: alterar para uma exception de negocio
+        }
+
+        salvarFoto(cmd.getFoto(), cmd.getNome());
+
+        copyProperties(cmd, usuario);
+
+        usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
+        usuarioRepository.save(usuario);
+    }
 }
