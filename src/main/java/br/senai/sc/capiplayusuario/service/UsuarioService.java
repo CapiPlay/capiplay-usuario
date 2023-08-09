@@ -1,13 +1,23 @@
 package br.senai.sc.capiplayusuario.service;
 
+
+import br.senai.sc.capiplayusuario.exceptions.CadastroInvalidoException;
+import br.senai.sc.capiplayusuario.exceptions.EmailEmUsoException;
+import br.senai.sc.capiplayusuario.exceptions.UsuarioInexistenteException;
+
 import br.senai.sc.capiplayusuario.exceptions.UsuarioInexistente;
 import br.senai.sc.capiplayusuario.model.dto.EditarUsuarioCommand;
+
 import br.senai.sc.capiplayusuario.model.dto.UsuarioDTO;
 import br.senai.sc.capiplayusuario.model.entity.Usuario;
 import br.senai.sc.capiplayusuario.repository.UsuarioRepository;
 import br.senai.sc.capiplayusuario.utils.GeradorUuidUtils;
 
+
+import org.springframework.beans.BeanUtils;
+
 import jakarta.validation.Valid;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -51,7 +61,7 @@ public class UsuarioService {
     public Usuario buscarUm(String id) {
         return usuarioRepository
                 .findById(id)
-                .orElseThrow(UsuarioInexistente::new);
+                .orElseThrow(UsuarioInexistenteException::new);
     }
 
     public List<Usuario> buscarTodos() {
@@ -75,7 +85,15 @@ public class UsuarioService {
             copyProperties(usuarioDTO, usuario);
             usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
             usuario.setEnabled(true);
-            return usuarioRepository.save(usuario);
+
+            try {
+                return usuarioRepository.save(usuario);
+            } catch (DataIntegrityViolationException e) {
+                System.out.println("Email inválido");
+               throw new EmailEmUsoException();
+            } catch (Exception e) {
+                throw new CadastroInvalidoException();
+            }
         }
         return null;
     }
@@ -101,7 +119,6 @@ public class UsuarioService {
 
             if(foto==null||foto.length == 0){
                 gerarFotoPadrao(nome, file);
-                return file.getAbsolutePath();
             }
 
             fos.write(foto);
@@ -123,7 +140,7 @@ public class UsuarioService {
             e.printStackTrace();
             return "Deu erro";
         }
-        return file.getAbsolutePath();
+        return file.getName();
     }
 
     public boolean existePorPerfil(String perfil) {

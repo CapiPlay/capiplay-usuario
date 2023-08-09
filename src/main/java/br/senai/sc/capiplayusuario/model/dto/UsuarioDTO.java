@@ -8,18 +8,17 @@ import java.sql.Date;
 @Data
 public class UsuarioDTO {
 
-    @NotNull
+
+    @NotBlank(message = "O nome não pode ser vazio")
     @Size(max = 50, message = "Nome execede o tamanho máximo")
     private String nome;
 
-    @NotBlank
-    @NotNull
+    @NotBlank(message = "A senha não pode ser vazia")
     @Size(max = 20, message = "Senha execede o tamanho máximo")
     private String senha;
 
-    @NotNull
-    @NotEmpty
-    @Email
+    @NotEmpty(message = "Email não pode ser vazio")
+    @Email(message = "Email inválido")
     @Size(max = 60, message = "Email execede o tamanho máximo")
     private String email;
 
@@ -29,7 +28,7 @@ public class UsuarioDTO {
 
     private String foto;
 
-    @NotNull
+    @NotNull(message = "Data de nascimento não pode ser")
     @Past(message = "Data de nascimento está no futuro")
     private Date dataNascimento;
 }

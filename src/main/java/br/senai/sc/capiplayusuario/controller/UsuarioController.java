@@ -37,13 +37,16 @@ public class UsuarioController {
 
     private final UsuarioService service;
 
+    private final EmailSenderService emailSenderService;
+
+    private final ResourceLoader resourceLoader;
+
     private final AuthenticationManager authenticationManager;
 
     private final TokenService tokenService;
 
     private final Publisher publisher;
 
-//    private EmailSenderService emailSenderService;
 
 //    private ResourceLoader resourceLoader;
     @PostMapping("/salvar")
