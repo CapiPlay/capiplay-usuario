@@ -1,8 +1,10 @@
 package br.senai.sc.capiplayusuario.controller;
 
 import br.senai.sc.capiplayusuario.infra.messaging.Publisher;
+import br.senai.sc.capiplayusuario.model.dto.EditarUsuarioCommand;
 import br.senai.sc.capiplayusuario.model.dto.LoginDTO;
 import br.senai.sc.capiplayusuario.model.dto.UsuarioDTO;
+import br.senai.sc.capiplayusuario.model.dto.UsuarioEditDTO;
 import br.senai.sc.capiplayusuario.model.entity.Usuario;
 import br.senai.sc.capiplayusuario.security.TokenService;
 import br.senai.sc.capiplayusuario.service.EmailSenderService;
@@ -37,18 +39,17 @@ import static org.springframework.http.ResponseEntity.created;
 @AllArgsConstructor
 public class UsuarioController {
 
-    private UsuarioService service;
+    private final UsuarioService service;
 
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
 
-    private TokenService tokenService;
+    private final TokenService tokenService;
 
-    private Publisher publisher;
+    private final Publisher publisher;
 
-    private EmailSenderService emailSenderService;
+//    private EmailSenderService emailSenderService;
 
-    private ResourceLoader resourceLoader;
-
+//    private ResourceLoader resourceLoader;
     @PostMapping("/salvar")
     public ResponseEntity salvar() {
         var id = UUID.randomUUID().toString();
@@ -59,17 +60,14 @@ public class UsuarioController {
     @PostMapping("/cadastro")
     public ResponseEntity<Boolean> criar(@ModelAttribute @Valid UsuarioDTO usuarioDTO,
                                          @RequestParam(value = "foto1", required = false) MultipartFile multipartFile) {
-
         if (usuarioDTO.getPerfil().isEmpty()) {
             usuarioDTO.setPerfil(service.nomePadrao(usuarioDTO.getEmail()));
         }
 
-        usuarioDTO.setFoto(service.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
-
         if (service.salvar(usuarioDTO) != null) {
+            usuarioDTO.setFoto(service.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
             return ResponseEntity.status(HttpStatus.CREATED).body(true);
         } else {
-            System.out.println("else");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
         }
     }
@@ -90,49 +88,48 @@ public class UsuarioController {
         return ResponseEntity.status(HttpStatus.OK).body(service.buscarUm(usuarioId));
     }
 
-    @GetMapping("/verifyEmail/{uuid}")
-    public ResponseEntity<Resource> verifyEmail(@PathVariable String uuid){
-        try {
-            System.out.println(uuid);
-            for (Usuario u:service.buscarTodos()) {
-                if (u.getUuid().equals(uuid)){
-                    u.setEnabled(true);
-                    service.alterarCampos(u);
-                } else {
-                    return ResponseEntity.notFound().build();
-                }
-            }
-            Resource resource = resourceLoader.getResource("classpath:static/verify.html");
-            if (resource.exists()) {
-                return ResponseEntity.ok(resource);
-            } else {
-                return ResponseEntity.notFound().build();
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(500).build();
-        }
-    }
+//    @GetMapping("/verifyEmail/{uuid}")
+//    public ResponseEntity<Resource> verifyEmail(@PathVariable String uuid){
+//        try {
+//            System.out.println(uuid);
+//            for (Usuario u:service.buscarTodos()) {
+//                if (u.getUuid().equals(uuid)){
+//                    u.setEnabled(true);
+//                    service.alterarCampos(u);
+//                } else {
+//                    return ResponseEntity.notFound().build();
+//                }
+//            }
+//            Resource resource = resourceLoader.getResource("classpath:static/verify.html");
+//            if (resource.exists()) {
+//                return ResponseEntity.ok(resource);
+//            } else {
+//                return ResponseEntity.notFound().build();
+//            }
+//        } catch (Exception e) {
+//            return ResponseEntity.status(500).build();
+//        }
+//    }
 
 
     @PutMapping
     public ResponseEntity<Boolean> editar(@RequestHeader String usuarioId,
-                                          @ModelAttribute @Valid UsuarioDTO usuarioDTO,
+                                          @ModelAttribute @Valid UsuarioEditDTO usuarioDTO,
                                           @RequestParam(name="foto1", required = false) MultipartFile multipartFile) {
-        if (service.existePorPerfil(usuarioDTO.getPerfil()) ||
-                service.existePorEmail(usuarioDTO.getEmail())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
-        }
         usuarioId = usuarioId.replace("\"", "");
-
-        if (usuarioDTO.getPerfil().isEmpty()) {
-            usuarioDTO.setPerfil(service.nomePadrao(usuarioDTO.getEmail()));
-        }
 
         usuarioDTO.setFoto(service.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
         if (service.editar(usuarioDTO, usuarioId)) {
             return ResponseEntity.status(HttpStatus.OK).body(true);
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
+    }
+
+    @PutMapping("/2")
+    public void editar2(@RequestHeader String usuarioId,
+                                           @ModelAttribute @Valid EditarUsuarioCommand cmd,
+                                           @RequestParam(name="foto1", required = false) MultipartFile foto) {
+        service.handle(cmd.from(usuarioId, foto));
     }
 
     @DeleteMapping

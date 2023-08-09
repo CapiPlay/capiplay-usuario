@@ -1,11 +1,14 @@
 package br.senai.sc.capiplayusuario.service;
 
 import br.senai.sc.capiplayusuario.exceptions.UsuarioInexistente;
+import br.senai.sc.capiplayusuario.model.dto.EditarUsuarioCommand;
 import br.senai.sc.capiplayusuario.model.dto.UsuarioDTO;
+import br.senai.sc.capiplayusuario.model.dto.UsuarioEditDTO;
 import br.senai.sc.capiplayusuario.model.entity.Usuario;
 import br.senai.sc.capiplayusuario.repository.UsuarioRepository;
 import br.senai.sc.capiplayusuario.utils.GeradorUuidUtils;
 
+import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -13,6 +16,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,6 +35,8 @@ import java.util.*;
 import java.util.List;
 import java.util.Random;
 
+import static org.springframework.beans.BeanUtils.copyProperties;
+
 
 @Service
 public class UsuarioService {
@@ -46,7 +53,7 @@ public class UsuarioService {
         return criarUsuario(usuarioDTO, usuario);
     }
 
-    public Boolean editar(UsuarioDTO usuarioDTO, String id) {
+    public Boolean editar(UsuarioEditDTO usuarioDTO, String id) {
         Usuario usuario = buscarUm(id);
         return criarUsuario(usuarioDTO, usuario) != null;
     }
@@ -69,17 +76,29 @@ public class UsuarioService {
         return usuarioRepository.existsByEmail(email);
     }
 
-
     private Usuario criarUsuario(UsuarioDTO usuarioDTO, Usuario usuario) {
         if (validaIdade(usuarioDTO.getDataNascimento())) {
-            BeanUtils.copyProperties(usuarioDTO, usuario);
+            if (existePorPerfil(usuarioDTO.getPerfil()) ||
+                    existePorEmail(usuarioDTO.getEmail())) {
+                return null;
+            }
+            copyProperties(usuarioDTO, usuario);
             usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
-            
+            usuario.setEnabled(true);
             return usuarioRepository.save(usuario);
         }
         return null;
     }
 
+    private Usuario criarUsuario(UsuarioEditDTO usuarioDTO, Usuario usuario) {
+        if (existePorPerfil(usuarioDTO.getPerfil())) {
+            return null;
+        }
+        copyProperties(usuarioDTO, usuario);
+        usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
+        usuario.setEnabled(true);
+        return usuarioRepository.save(usuario);
+    }
 
     public void alterarCampos(Usuario usuario){
         usuarioRepository.save(usuario);
@@ -148,6 +167,7 @@ public class UsuarioService {
     }
 
     public String nomePadrao(String email) {
+        System.out.println(email);
         int indexArroba = email.indexOf('@');
         if (indexArroba != -1) {
             String nomePadrao = email.substring(0, indexArroba).trim();
@@ -186,4 +206,15 @@ public class UsuarioService {
     }
 
 
+    public void handle(EditarUsuarioCommand cmd) {
+        Usuario usuario = buscarUm(cmd.getId());
+
+        if (existePorPerfil(cmd.getPerfil())) {
+            throw new IllegalArgumentException("Nome de usuário já está em uso"); // TODO: alterar para uma exception de negocio
+        }
+
+        copyProperties(cmd, usuario);
+        usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
+        usuarioRepository.save(usuario);
+    }
 }
