@@ -36,17 +36,17 @@ import static org.springframework.http.ResponseEntity.created;
 @AllArgsConstructor
 public class UsuarioController {
 
-    private UsuarioService service;
+    private final UsuarioService service;
 
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
 
-    private TokenService tokenService;
+    private final TokenService tokenService;
 
-    private Publisher publisher;
+    private final Publisher publisher;
 
-    private EmailSenderService emailSenderService;
+    private final EmailSenderService emailSenderService;
 
-    private ResourceLoader resourceLoader;
+    private final ResourceLoader resourceLoader;
 
     @PostMapping("/salvar")
     public ResponseEntity salvar() {

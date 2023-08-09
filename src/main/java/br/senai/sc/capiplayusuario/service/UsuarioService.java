@@ -74,7 +74,7 @@ public class UsuarioService {
         if (validaIdade(usuarioDTO.getDataNascimento())) {
             BeanUtils.copyProperties(usuarioDTO, usuario);
             usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
-            
+            usuario.setEnabled(true);
             return usuarioRepository.save(usuario);
         }
         return null;
@@ -93,7 +93,6 @@ public class UsuarioService {
                 fos.write(multipartFile.getBytes());
             } catch (Exception e){
                 gerarFotoPadrao(nome, file);
-                return file.getAbsolutePath();
             }
 
             BufferedImage imagemOriginal = ImageIO.read(file);
@@ -107,7 +106,7 @@ public class UsuarioService {
             e.printStackTrace();
             return "Deu erro";
         }
-        return file.getAbsolutePath();
+        return file.getName();
     }
 
     public Usuario buscarPorPerfil(String perfil) {
