@@ -1,13 +1,12 @@
 package br.senai.sc.capiplayusuario.service;
 
-import br.senai.sc.capiplayusuario.exceptions.UsuarioInexistente;
+import br.senai.sc.capiplayusuario.exceptions.CadastroInvalidoException;
+import br.senai.sc.capiplayusuario.exceptions.EmailEmUsoException;
+import br.senai.sc.capiplayusuario.exceptions.UsuarioInexistenteException;
 import br.senai.sc.capiplayusuario.model.dto.UsuarioDTO;
 import br.senai.sc.capiplayusuario.model.entity.Usuario;
 import br.senai.sc.capiplayusuario.repository.UsuarioRepository;
 import br.senai.sc.capiplayusuario.utils.GeradorUuidUtils;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +22,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.Period;
-import java.time.ZoneId;
 import java.util.*;
 import java.util.List;
 import java.util.Random;
@@ -54,7 +50,7 @@ public class UsuarioService {
     public Usuario buscarUm(String id) {
         return usuarioRepository
                 .findById(id)
-                .orElseThrow(UsuarioInexistente::new);
+                .orElseThrow(UsuarioInexistenteException::new);
     }
 
     public List<Usuario> buscarTodos() {
@@ -75,7 +71,14 @@ public class UsuarioService {
             BeanUtils.copyProperties(usuarioDTO, usuario);
             usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
             usuario.setEnabled(true);
-            return usuarioRepository.save(usuario);
+            try {
+                return usuarioRepository.save(usuario);
+            } catch (DataIntegrityViolationException e) {
+                System.out.println("Email inválido");
+               throw new EmailEmUsoException();
+            } catch (Exception e) {
+                throw new CadastroInvalidoException();
+            }
         }
         return null;
     }
