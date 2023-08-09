@@ -11,33 +11,33 @@ public class BaseExceptionHandler {
 
     @ExceptionHandler(BaseException.class)
     public ResponseEntity<Object> handleNegocioException(BaseException ex, WebRequest request) {
-        ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage());
-        return new ResponseEntity<>(apiError, apiError.getStatus());
+        ApiError apiError = new ApiError(ex.getClass().getSimpleName(), ex.getMessage());
+        return ResponseEntity.badRequest().body(apiError);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleAllException(Exception ex, WebRequest request) {
-        ApiError apiError = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
-        return new ResponseEntity<>(apiError, apiError.getStatus());
+        ApiError apiError = new ApiError(ex.getClass().getSimpleName(), ex.getMessage());
+        return ResponseEntity.internalServerError().body(apiError);
     }
 
     // Adicione outros manipuladores de exceção conforme necessário
 
     class ApiError {
-        private HttpStatus status;
-        private String message;
+        private String type;
+        private String error;
 
-        ApiError(HttpStatus status, String message) {
-            this.status = status;
-            this.message = message;
+        ApiError(String type, String message) {
+            this.type = type;
+            this.error = message;
         }
 
-        public HttpStatus getStatus() {
-            return status;
+        public String getType() {
+            return type;
         }
 
-        public String getMessage() {
-            return message;
+        public String getError() {
+            return error;
         }
     }
 }
