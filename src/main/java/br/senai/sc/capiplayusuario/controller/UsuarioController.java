@@ -4,20 +4,14 @@ import br.senai.sc.capiplayusuario.infra.messaging.Publisher;
 import br.senai.sc.capiplayusuario.model.dto.EditarUsuarioCommand;
 import br.senai.sc.capiplayusuario.model.dto.LoginDTO;
 import br.senai.sc.capiplayusuario.model.dto.UsuarioDTO;
-import br.senai.sc.capiplayusuario.model.dto.UsuarioEditDTO;
 import br.senai.sc.capiplayusuario.model.entity.Usuario;
 import br.senai.sc.capiplayusuario.security.TokenService;
-import br.senai.sc.capiplayusuario.service.EmailSenderService;
 import br.senai.sc.capiplayusuario.service.UsuarioService;
 import br.senai.sc.capiplayusuario.usuario.events.UsuarioSalvoEvent;
 import br.senai.sc.capiplayusuario.usuario.projections.DetalhesUsuarioProjection;
 import jakarta.validation.Valid;
 
 import lombok.AllArgsConstructor;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +21,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.net.URI;
+import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
 
@@ -59,13 +55,12 @@ public class UsuarioController {
 
     @PostMapping("/cadastro")
     public ResponseEntity<Boolean> criar(@ModelAttribute @Valid UsuarioDTO usuarioDTO,
-                                         @RequestParam(value = "foto1", required = false) MultipartFile multipartFile) {
+                                         @RequestParam(value = "foto1", required = false) MultipartFile multipartFile) throws IOException {
         if (usuarioDTO.getPerfil().isEmpty()) {
             usuarioDTO.setPerfil(service.nomePadrao(usuarioDTO.getEmail()));
         }
 
-        if (service.salvar(usuarioDTO) != null) {
-            usuarioDTO.setFoto(service.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
+        if (service.salvar(usuarioDTO, Objects.nonNull(multipartFile) ? multipartFile.getBytes():null) != null) {
             return ResponseEntity.status(HttpStatus.CREATED).body(true);
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
@@ -112,29 +107,28 @@ public class UsuarioController {
 //    }
 
 
+//    @PutMapping
+//    public ResponseEntity<Boolean> editar(@RequestHeader String usuarioId,
+//                                          @ModelAttribute @Valid UsuarioEditDTO usuarioDTO,
+//                                          @RequestParam(name="foto1", required = false) MultipartFile multipartFile) throws IOException {
+//
+//
+//        usuarioDTO.setFoto(service.salvarFoto(multipartFile.getBytes(), usuarioDTO.getPerfil()));
+//        if (service.editar(usuarioDTO, usuarioId)) {
+//            return ResponseEntity.status(HttpStatus.OK).body(true);
+//        }
+//        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
+//    }
+
     @PutMapping
-    public ResponseEntity<Boolean> editar(@RequestHeader String usuarioId,
-                                          @ModelAttribute @Valid UsuarioEditDTO usuarioDTO,
-                                          @RequestParam(name="foto1", required = false) MultipartFile multipartFile) {
-        usuarioId = usuarioId.replace("\"", "");
-
-        usuarioDTO.setFoto(service.salvarFoto(multipartFile, usuarioDTO.getPerfil()));
-        if (service.editar(usuarioDTO, usuarioId)) {
-            return ResponseEntity.status(HttpStatus.OK).body(true);
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
-    }
-
-    @PutMapping("/2")
-    public void editar2(@RequestHeader String usuarioId,
-                                           @ModelAttribute @Valid EditarUsuarioCommand cmd,
-                                           @RequestParam(name="foto1", required = false) MultipartFile foto) {
+    public void editar(@RequestHeader("usuarioId") String usuarioId,
+                       @ModelAttribute EditarUsuarioCommand cmd,
+                       @RequestParam(name="foto1", required = false) MultipartFile foto) throws IOException {
         service.handle(cmd.from(usuarioId, foto));
     }
 
     @DeleteMapping
     public ResponseEntity<?> deletar(@RequestHeader String usuarioId) {
-        usuarioId = usuarioId.replace("\"", "");
         service.deletar(usuarioId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

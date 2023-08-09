@@ -1,10 +1,15 @@
 package br.senai.sc.capiplayusuario.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+
+import static java.util.Objects.nonNull;
 
 @Data
 public class EditarUsuarioCommand {
@@ -27,11 +32,12 @@ public class EditarUsuarioCommand {
     @Size(max = 250, message = "Descrição excede o tamanho máximo")
     private String descricao;
 
-    private MultipartFile foto;
+    private byte[] foto;
 
-    public EditarUsuarioCommand from(String id, MultipartFile foto){
+    public EditarUsuarioCommand from(String id, MultipartFile foto) throws IOException {
         this.id = id;
-        this.foto = foto;
+        if(nonNull(foto))
+            this.foto = foto.getBytes();
         return this;
     }
 }
