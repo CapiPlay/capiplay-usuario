@@ -1,5 +1,6 @@
 package br.senai.sc.capiplayusuario.model.dto;
 
+import br.senai.sc.capiplayusuario.utils.validacao.senha.SenhaForte;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -13,8 +14,10 @@ public class UsuarioDTO {
     @Size(max = 50, message = "Nome execede o tamanho máximo")
     private String nome;
 
+
     @NotBlank(message = "A senha não pode ser vazia")
-    @Size(max = 20, message = "Senha execede o tamanho máximo")
+    @Size(max = 20, min = 6, message = "Senha deve conter entre 6 a 20 caracteres")
+    @SenhaForte
     private String senha;
 
     @NotEmpty(message = "Email não pode ser vazio")

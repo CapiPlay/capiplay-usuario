@@ -15,7 +15,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, String> {
     boolean existsByPerfil(String perfil);
     Usuario findByEmail(String email);
 
-    @Query(value = "select perfil from db_capiplay_usuario.usuario where lower(perfil) like lower(concat(:perfil,'%'))", nativeQuery = true)
-    Set<String> findAllByPerfil(String perfil);
+    @Query(value = "select perfil from db_capiplay_usuario.usuario where lower(perfil) like lower(concat(:perfil,'%')) and uuid != :id", nativeQuery = true)
+    Set<String> findAllByPerfil(String perfil, String id);
 
 }

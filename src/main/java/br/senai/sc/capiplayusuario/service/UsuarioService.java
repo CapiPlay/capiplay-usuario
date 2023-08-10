@@ -5,7 +5,6 @@ import br.senai.sc.capiplayusuario.exceptions.CadastroInvalidoException;
 import br.senai.sc.capiplayusuario.exceptions.EmailEmUsoException;
 import br.senai.sc.capiplayusuario.exceptions.UsuarioInexistenteException;
 
-import br.senai.sc.capiplayusuario.exceptions.UsuarioInexistente;
 import br.senai.sc.capiplayusuario.model.dto.EditarUsuarioCommand;
 
 import br.senai.sc.capiplayusuario.model.dto.UsuarioDTO;
@@ -13,14 +12,12 @@ import br.senai.sc.capiplayusuario.model.entity.Usuario;
 import br.senai.sc.capiplayusuario.repository.UsuarioRepository;
 import br.senai.sc.capiplayusuario.utils.GeradorUuidUtils;
 
-
-import org.springframework.beans.BeanUtils;
-
 import jakarta.validation.Valid;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -53,44 +50,27 @@ public class UsuarioService {
         return criarUsuario(usuarioDTO, usuario);
     }
 
-//    public Boolean editar(UsuarioEditDTO usuarioDTO, String id) {
-//        Usuario usuario = buscarUm(id);
-//        return criarUsuario(usuarioDTO, usuario) != null;
-//    }
-
     public Usuario buscarUm(String id) {
         return usuarioRepository
                 .findById(id)
                 .orElseThrow(UsuarioInexistenteException::new);
     }
 
-    public List<Usuario> buscarTodos() {
-        return usuarioRepository.findAll();
-    }
 
     public void deletar(String id) {
         usuarioRepository.deleteById(id);
     }
 
-    public boolean existePorEmail(String email) {
-        return usuarioRepository.existsByEmail(email);
-    }
-
     private Usuario criarUsuario(UsuarioDTO usuarioDTO, Usuario usuario) {
         if (validaIdade(usuarioDTO.getDataNascimento())) {
-            if (existePorPerfil(usuarioDTO.getPerfil()) ||
-                    existePorEmail(usuarioDTO.getEmail())) {
-                return null;
-            }
             copyProperties(usuarioDTO, usuario);
             usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
             usuario.setEnabled(true);
-
             try {
                 return usuarioRepository.save(usuario);
             } catch (DataIntegrityViolationException e) {
                 System.out.println("Email inválido");
-               throw new EmailEmUsoException();
+                throw new EmailEmUsoException();
             } catch (Exception e) {
                 throw new CadastroInvalidoException();
             }
@@ -98,26 +78,12 @@ public class UsuarioService {
         return null;
     }
 
-//    private Usuario criarUsuario(UsuarioEditDTO usuarioDTO, Usuario usuario) {
-//        if (existePorPerfil(usuarioDTO.getPerfil())) {
-//            return null;
-//        }
-//        copyProperties(usuarioDTO, usuario);
-//        usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
-//        usuario.setEnabled(true);
-//        return usuarioRepository.save(usuario);
-//    }
-
-    public void alterarCampos(Usuario usuario){
-        usuarioRepository.save(usuario);
-    }
-
     public String salvarFoto(byte[] foto, String nome) {
         String uuid = GeradorUuidUtils.gerarUuid();
         File file = new File(diretorio + uuid + "_foto.png");
         try (FileOutputStream fos = new FileOutputStream(file)) {
 
-            if(foto==null||foto.length == 0){
+            if (foto == null || foto.length == 0) {
                 gerarFotoPadrao(nome, file);
             }
 
@@ -180,23 +146,17 @@ public class UsuarioService {
         ImageIO.write(imagemPadrao, "png", arquivoImagemPadrao);
     }
 
-    public String nomePadrao(String email) {
-        System.out.println(email);
-        int indexArroba = email.indexOf('@');
-        if (indexArroba != -1) {
-            String nomePadrao = email.substring(0, indexArroba).trim();
+    public String nomePadrao(String nomePadrao, String id) {
 
-            String nomeFinal = nomePadrao;
+        String nomeFinal = nomePadrao;
 
-            Set<String> users = usuarioRepository.findAllByPerfil(nomePadrao);
+        Set<String> users = usuarioRepository.findAllByPerfil(nomePadrao, id);
 
-            for (int i = 0; users.contains(nomeFinal); i++) {
-                nomeFinal = nomePadrao + "_" + i;
-            }
-            return nomeFinal;
-        } else {
-            return null;
+        for (int i = 0; users.contains(nomeFinal); i++) {
+            nomeFinal = nomePadrao + "_" + i;
         }
+        return nomeFinal;
+
     }
 
     public boolean validaIdade(Date dataNascimento) {
@@ -220,11 +180,12 @@ public class UsuarioService {
     }
 
 
-    public void handle(@Valid EditarUsuarioCommand cmd) {
-        Usuario usuario = buscarUm(cmd.getId());
+    public Usuario handle(@Valid EditarUsuarioCommand cmd, String id) {
+        Usuario usuario = buscarUm(id);
 
         if (existePorPerfil(cmd.getPerfil())) {
-            throw new IllegalArgumentException("Nome de usuário já está em uso"); // TODO: alterar para uma exception de negocio
+            cmd.setPerfil(nomePadrao(cmd.getPerfil(), id));
+            System.out.println("Editando perfil");
         }
 
         salvarFoto(cmd.getFoto(), cmd.getNome());
@@ -232,6 +193,6 @@ public class UsuarioService {
         copyProperties(cmd, usuario);
 
         usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
-        usuarioRepository.save(usuario);
+        return usuarioRepository.save(usuario);
     }
 }

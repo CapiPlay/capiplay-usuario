@@ -18,25 +18,24 @@ import static org.springframework.http.ResponseEntity.internalServerError;
 public class BaseExceptionHandler {
 
     @ExceptionHandler(BaseException.class)
-    public ResponseEntity<Object> handleNegocioException(BaseException ex) {
+    public ResponseEntity<ApiError> handleBaseException(BaseException ex) {
         ApiError apiError = new ApiError(ex.getClass().getSimpleName(), ex.getMessage());
         return badRequest().body(apiError);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Object> handleAllException(Exception ex) {
+    public ResponseEntity<ApiError> handleException(Exception ex) {
         ApiError apiError = new ApiError(ex.getClass().getSimpleName(), ex.getMessage());
         return internalServerError().body(apiError);
     }
 
     @ExceptionHandler(BindException.class)
-    public ResponseEntity<Object> validacoesInvalidas(BindException ex) {
+    public ResponseEntity<Object> handleValidacao(BindException ex) {
 
         BindingResult bindingResult = ex.getBindingResult();
         FieldError fieldError = bindingResult.getFieldError();
 
         if (fieldError != null) {
-            String fieldName = fieldError.getField();
             ApiError apiError = new ApiError(ex.getClass().getSimpleName(), fieldError.getDefaultMessage());
             return badRequest().body(apiError);
         }

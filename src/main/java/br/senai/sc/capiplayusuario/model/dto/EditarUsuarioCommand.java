@@ -2,6 +2,7 @@ package br.senai.sc.capiplayusuario.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -14,10 +15,7 @@ import static java.util.Objects.nonNull;
 @Data
 public class EditarUsuarioCommand {
 
-    @NotNull
-    private String id;
-
-    @NotNull
+    @NotEmpty
     @Size(max = 50, message = "Nome execede o tamanho máximo")
     private String nome;
 
@@ -25,7 +23,6 @@ public class EditarUsuarioCommand {
     private String perfil;
 
     @NotBlank
-    @NotNull
     @Size(max = 20, message = "Senha execede o tamanho máximo")
     private String senha;
 
@@ -34,8 +31,7 @@ public class EditarUsuarioCommand {
 
     private byte[] foto;
 
-    public EditarUsuarioCommand from(String id, MultipartFile foto) throws IOException {
-        this.id = id;
+    public EditarUsuarioCommand from( MultipartFile foto) throws IOException {
         if(nonNull(foto))
             this.foto = foto.getBytes();
         return this;

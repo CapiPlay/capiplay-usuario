@@ -6,6 +6,7 @@ import br.senai.sc.capiplayusuario.model.dto.LoginDTO;
 import br.senai.sc.capiplayusuario.model.dto.UsuarioDTO;
 import br.senai.sc.capiplayusuario.model.entity.Usuario;
 import br.senai.sc.capiplayusuario.security.TokenService;
+import br.senai.sc.capiplayusuario.service.EmailSenderService;
 import br.senai.sc.capiplayusuario.service.UsuarioService;
 import br.senai.sc.capiplayusuario.usuario.events.UsuarioSalvoEvent;
 import br.senai.sc.capiplayusuario.usuario.projections.DetalhesUsuarioProjection;
@@ -13,6 +14,7 @@ import jakarta.validation.Valid;
 
 import lombok.AllArgsConstructor;
 
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -37,9 +39,9 @@ public class UsuarioController {
 
     private final UsuarioService service;
 
-    private final EmailSenderService emailSenderService;
+//    private final EmailSenderService emailSenderService;
 
-    private final ResourceLoader resourceLoader;
+//    private final ResourceLoader resourceLoader;
 
     private final AuthenticationManager authenticationManager;
 
@@ -47,8 +49,8 @@ public class UsuarioController {
 
     private final Publisher publisher;
 
-
 //    private ResourceLoader resourceLoader;
+
     @PostMapping("/salvar")
     public ResponseEntity salvar() {
         var id = UUID.randomUUID().toString();
@@ -60,7 +62,11 @@ public class UsuarioController {
     public ResponseEntity<Boolean> criar(@ModelAttribute @Valid UsuarioDTO usuarioDTO,
                                          @RequestParam(value = "foto1", required = false) MultipartFile multipartFile) throws IOException {
         if (usuarioDTO.getPerfil().isEmpty()) {
-            usuarioDTO.setPerfil(service.nomePadrao(usuarioDTO.getEmail()));
+            String email = usuarioDTO.getEmail();
+            int indexArroba = email.indexOf('@');
+
+            String nomePadrao = email.substring(0, indexArroba).trim();
+            usuarioDTO.setPerfil(service.nomePadrao(nomePadrao, ""));
         }
 
         if (service.salvar(usuarioDTO, Objects.nonNull(multipartFile) ? multipartFile.getBytes():null) != null) {
@@ -82,7 +88,6 @@ public class UsuarioController {
 
     @GetMapping
     public ResponseEntity<DetalhesUsuarioProjection> detalhe(@RequestHeader String usuarioId) {
-        usuarioId = usuarioId.replace("\"", "");
         return ResponseEntity.status(HttpStatus.OK).body(service.buscarUm(usuarioId));
     }
 
@@ -124,10 +129,13 @@ public class UsuarioController {
 //    }
 
     @PutMapping
-    public void editar(@RequestHeader("usuarioId") String usuarioId,
-                       @ModelAttribute EditarUsuarioCommand cmd,
+    public  ResponseEntity<Boolean> editar(@RequestHeader("usuarioId") String usuarioId,
+                       @ModelAttribute @Valid EditarUsuarioCommand cmd,
                        @RequestParam(name="foto1", required = false) MultipartFile foto) throws IOException {
-        service.handle(cmd.from(usuarioId, foto));
+        if (service.handle(cmd.from(foto), usuarioId) != null) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(true);
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(false);
     }
 
     @DeleteMapping
