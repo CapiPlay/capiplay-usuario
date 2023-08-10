@@ -54,7 +54,6 @@ public class UsuarioController {
     @PostMapping("/salvar")
     public ResponseEntity salvar() {
         var id = UUID.randomUUID().toString();
-        publisher.publish(new UsuarioSalvoEvent(id, "Teste " + new Random().nextInt()));
         return created(URI.create(id)).build();
     }
 
@@ -68,8 +67,9 @@ public class UsuarioController {
             String nomePadrao = email.substring(0, indexArroba).trim();
             usuarioDTO.setPerfil(service.nomePadrao(nomePadrao, ""));
         }
-
-        if (service.salvar(usuarioDTO, Objects.nonNull(multipartFile) ? multipartFile.getBytes():null) != null) {
+        Usuario usuario = service.salvar(usuarioDTO, Objects.nonNull(multipartFile) ? multipartFile.getBytes():null);
+        if (usuario != null) {
+            publisher.publish(new UsuarioSalvoEvent(usuario));
             return ResponseEntity.status(HttpStatus.CREATED).body(true);
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
@@ -80,9 +80,8 @@ public class UsuarioController {
     public ResponseEntity<String> login(@RequestBody LoginDTO loginDTO) {
         var usernamePassword = new UsernamePasswordAuthenticationToken
                 (loginDTO.email(), loginDTO.senha());
-        System.out.println(usernamePassword);
+
         Authentication auth = authenticationManager.authenticate(usernamePassword);
-        System.out.println("Auth");
         return ResponseEntity.status(HttpStatus.OK).body(tokenService.generateToken((Usuario) auth.getPrincipal()));
     }
 

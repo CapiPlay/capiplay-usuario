@@ -58,7 +58,11 @@ public class UsuarioService {
 
 
     public void deletar(String id) {
-        usuarioRepository.deleteById(id);
+        try {
+            usuarioRepository.deleteById(id);
+        } catch (Exception e) {
+            throw new UsuarioInexistenteException();
+        }
     }
 
     private Usuario criarUsuario(UsuarioDTO usuarioDTO, Usuario usuario) {
@@ -69,7 +73,6 @@ public class UsuarioService {
             try {
                 return usuarioRepository.save(usuario);
             } catch (DataIntegrityViolationException e) {
-                System.out.println("Email inválido");
                 throw new EmailEmUsoException();
             } catch (Exception e) {
                 throw new CadastroInvalidoException();
@@ -85,6 +88,7 @@ public class UsuarioService {
 
             if (foto == null || foto.length == 0) {
                 gerarFotoPadrao(nome, file);
+                return file.getAbsolutePath();
             }
 
             fos.write(foto);
@@ -185,7 +189,6 @@ public class UsuarioService {
 
         if (existePorPerfil(cmd.getPerfil())) {
             cmd.setPerfil(nomePadrao(cmd.getPerfil(), id));
-            System.out.println("Editando perfil");
         }
 
         salvarFoto(cmd.getFoto(), cmd.getNome());
