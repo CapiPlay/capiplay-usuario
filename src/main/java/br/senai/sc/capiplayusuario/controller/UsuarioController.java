@@ -78,10 +78,10 @@ public class UsuarioController {
     public ResponseEntity<String> login(@RequestBody LoginDTO loginDTO) {
         var usernamePassword = new UsernamePasswordAuthenticationToken
                 (loginDTO.email(), loginDTO.senha());
-        System.out.println(usernamePassword);
+
         Authentication auth = authenticationManager.authenticate(usernamePassword);
-        System.out.println("Auth");
-        return ResponseEntity.status(HttpStatus.OK).body(tokenService.generateToken((Usuario) auth.getPrincipal()));
+        Usuario usuario = (Usuario) auth.getPrincipal();
+        return ResponseEntity.status(HttpStatus.OK).body(tokenService.generateToken(usuario.getUuid()));
     }
 
     @GetMapping

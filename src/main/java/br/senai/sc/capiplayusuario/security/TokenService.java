@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.UUID;
 
 import static com.auth0.jwt.algorithms.Algorithm.HMAC256;
 
@@ -20,21 +21,28 @@ public class TokenService {
     @Value("${secret.key}")
     private String secret;
 
-    public String generateToken(Usuario usuario){
+    public String generateToken(String id) {
+        return generateToken(id, false);
+    }
+
+    public String generateToken(String id, boolean anonimo) {
+
         try {
             Algorithm algorithm = HMAC256(secret);
-            return JWT.create().withIssuer("capiplay")
-                    .withSubject(usuario.getNome())
+
+            var jwt = JWT.create().withIssuer("capiplay")
                     .withExpiresAt(genExpirationDate())
-                    .withClaim("usuarioId", usuario.getUuid())
-                    .sign(algorithm);
+                    .withClaim("usuarioId", id);
+            if (anonimo)
+                jwt.withClaim("anonimo", true);
+
+            return jwt.sign(algorithm);
         } catch (JWTCreationException a) {
             throw new RuntimeException("Erro ao gerar token");
         }
-
     }
 
-    private Instant genExpirationDate(){
+    private Instant genExpirationDate() {
         return LocalDateTime.now().plusDays(7).toInstant(ZoneOffset.of("-03:00"));
     }
 }

@@ -5,5 +5,5 @@ public interface DetalhesUsuarioProjection {
     String getEmail();
     String getPerfil();
     String getFoto();
-    String getDataNascimento();
+//    String getDataNascimento();
 }
