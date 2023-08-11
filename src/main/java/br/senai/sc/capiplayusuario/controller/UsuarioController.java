@@ -82,7 +82,8 @@ public class UsuarioController {
                 (loginDTO.email(), loginDTO.senha());
 
         Authentication auth = authenticationManager.authenticate(usernamePassword);
-        return ResponseEntity.status(HttpStatus.OK).body(tokenService.generateToken((Usuario) auth.getPrincipal()));
+        Usuario usuario = (Usuario) auth.getPrincipal();
+        return ResponseEntity.status(HttpStatus.OK).body(tokenService.generateToken(usuario.getUuid()));
     }
 
     @GetMapping
