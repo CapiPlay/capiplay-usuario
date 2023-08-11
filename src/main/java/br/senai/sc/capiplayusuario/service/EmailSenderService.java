@@ -18,8 +18,8 @@ public class EmailSenderService {
         try {
             String verificationLink = createVerificationLink(uuid);
 
-            // Load the HTML file from the static folder
-            String htmlContent = "<html><body><h1>Email Verification</h1><p>Clique <a href='" + verificationLink + "'>aqui</a> para verificar o email:</p></body></html>";
+            String htmlContent = "<html><body><h1>Email Verification</h1><p>Clique <a href='" + verificationLink +
+                    "'>aqui</a> para verificar o email:</p></body></html>";
 
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -28,7 +28,6 @@ public class EmailSenderService {
             helper.setTo(toEmail);
             helper.setSubject(subject);
 
-            // Use true para indicar que o conteúdo é HTML
             helper.setText(htmlContent, true);
 
             javaMailSender.send(message);

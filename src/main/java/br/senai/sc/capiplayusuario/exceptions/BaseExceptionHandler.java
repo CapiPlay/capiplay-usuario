@@ -2,42 +2,47 @@ package br.senai.sc.capiplayusuario.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindException;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
+
+import static org.springframework.http.ResponseEntity.badRequest;
+import static org.springframework.http.ResponseEntity.internalServerError;
 
 @ControllerAdvice
 public class BaseExceptionHandler {
 
     @ExceptionHandler(BaseException.class)
-    public ResponseEntity<Object> handleNegocioException(BaseException ex, WebRequest request) {
-        ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage());
-        return new ResponseEntity<>(apiError, apiError.getStatus());
+    public ResponseEntity<ApiError> handleBaseException(BaseException ex) {
+        ApiError apiError = new ApiError(ex.getClass().getSimpleName(), ex.getMessage());
+        return badRequest().body(apiError);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Object> handleAllException(Exception ex, WebRequest request) {
-        ApiError apiError = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
-        return new ResponseEntity<>(apiError, apiError.getStatus());
+    public ResponseEntity<ApiError> handleException(Exception ex) {
+        ApiError apiError = new ApiError(ex.getClass().getSimpleName(), ex.getMessage());
+        return internalServerError().body(apiError);
     }
 
-    // Adicione outros manipuladores de exceção conforme necessário
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<Object> handleValidacao(BindException ex) {
 
-    class ApiError {
-        private HttpStatus status;
-        private String message;
+        BindingResult bindingResult = ex.getBindingResult();
+        FieldError fieldError = bindingResult.getFieldError();
 
-        ApiError(HttpStatus status, String message) {
-            this.status = status;
-            this.message = message;
+        if (fieldError != null) {
+            ApiError apiError = new ApiError(ex.getClass().getSimpleName(), fieldError.getDefaultMessage());
+            return badRequest().body(apiError);
         }
 
-        public HttpStatus getStatus() {
-            return status;
-        }
-
-        public String getMessage() {
-            return message;
-        }
+        return badRequest().body("Erro de validação");
     }
+
+
+    static record ApiError(String type, String error) { }
 }

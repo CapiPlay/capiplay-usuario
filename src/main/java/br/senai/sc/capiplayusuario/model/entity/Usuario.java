@@ -23,12 +23,13 @@ public class Usuario implements UsuarioComentarioProjection, DetalhesUsuarioProj
     @Column(length = 50, nullable = false)
     private String nome;
 
+    @Column(unique = true)
     private String perfil; // Apelido
 
     @Column(nullable = false)
     private String senha;
 
-    @Column(length = 60, nullable = false)
+    @Column(length = 60, nullable = false, unique = true)
     private String email;
 
     private String foto;
