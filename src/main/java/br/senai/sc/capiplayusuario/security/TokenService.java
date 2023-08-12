@@ -32,9 +32,8 @@ public class TokenService {
 
             var jwt = JWT.create().withIssuer("capiplay")
                     .withExpiresAt(genExpirationDate())
-                    .withClaim("usuarioId", id);
-            if (anonimo)
-                jwt.withClaim("anonimo", true);
+                    .withClaim("usuarioId", id)
+                    .withClaim("anonimo", anonimo);
 
             return jwt.sign(algorithm);
         } catch (JWTCreationException a) {

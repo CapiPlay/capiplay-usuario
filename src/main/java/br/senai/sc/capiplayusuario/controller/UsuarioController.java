@@ -10,6 +10,7 @@ import br.senai.sc.capiplayusuario.service.EmailSenderService;
 import br.senai.sc.capiplayusuario.service.UsuarioService;
 import br.senai.sc.capiplayusuario.usuario.events.UsuarioSalvoEvent;
 import br.senai.sc.capiplayusuario.usuario.projections.DetalhesUsuarioProjection;
+import com.rabbitmq.client.Return;
 import jakarta.validation.Valid;
 
 import lombok.AllArgsConstructor;
@@ -30,6 +31,7 @@ import java.util.Random;
 import java.util.UUID;
 
 import static org.springframework.http.ResponseEntity.created;
+import static org.springframework.http.ResponseEntity.ok;
 
 @RestController
 @RequestMapping("/api/usuario")
@@ -60,20 +62,8 @@ public class UsuarioController {
     @PostMapping("/cadastro")
     public ResponseEntity<Boolean> criar(@ModelAttribute @Valid UsuarioDTO usuarioDTO,
                                          @RequestParam(value = "foto1", required = false) MultipartFile multipartFile) throws IOException {
-        if (usuarioDTO.getPerfil().isEmpty()) {
-            String email = usuarioDTO.getEmail();
-            int indexArroba = email.indexOf('@');
-
-            String nomePadrao = email.substring(0, indexArroba).trim();
-            usuarioDTO.setPerfil(service.nomePadrao(nomePadrao, ""));
-        }
-        Usuario usuario = service.salvar(usuarioDTO, Objects.nonNull(multipartFile) ? multipartFile.getBytes():null);
-        if (usuario != null) {
-            publisher.publish(new UsuarioSalvoEvent(usuario));
-            return ResponseEntity.status(HttpStatus.CREATED).body(true);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
-        }
+        service.salvar(usuarioDTO, Objects.nonNull(multipartFile) ? multipartFile.getBytes() : null);
+        return ResponseEntity.status(HttpStatus.CREATED).body(true);
     }
 
     @PostMapping("/login")
@@ -129,18 +119,24 @@ public class UsuarioController {
 //    }
 
     @PutMapping
-    public  ResponseEntity<Boolean> editar(@RequestHeader("usuarioId") String usuarioId,
-                       @ModelAttribute @Valid EditarUsuarioCommand cmd,
-                       @RequestParam(name="foto1", required = false) MultipartFile foto) throws IOException {
-        if (service.handle(cmd.from(foto), usuarioId) != null) {
-            return ResponseEntity.status(HttpStatus.CREATED).body(true);
-        }
-        return ResponseEntity.status(HttpStatus.CREATED).body(false);
+    public void editar(@RequestHeader("usuarioId") String usuarioId,
+                                          @ModelAttribute EditarUsuarioCommand cmd,
+                                          @RequestParam(name = "foto1", required = false) MultipartFile foto) throws IOException {
+        service.handle(cmd.from(usuarioId, foto));
     }
 
     @DeleteMapping
     public ResponseEntity<?> deletar(@RequestHeader String usuarioId) {
         service.deletar(usuarioId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @PostMapping("/anonimo")
+    public ResponseEntity<String> anonimo() {
+        return ResponseEntity.status(HttpStatus.OK).body(
+                tokenService.generateToken(
+                        UUID.randomUUID().toString(), true
+                )
+        );
     }
 }

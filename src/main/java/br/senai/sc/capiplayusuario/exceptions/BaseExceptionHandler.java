@@ -1,5 +1,7 @@
 package br.senai.sc.capiplayusuario.exceptions;
 
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
@@ -19,14 +21,12 @@ public class BaseExceptionHandler {
 
     @ExceptionHandler(BaseException.class)
     public ResponseEntity<ApiError> handleBaseException(BaseException ex) {
-        ApiError apiError = new ApiError(ex.getClass().getSimpleName(), ex.getMessage());
-        return badRequest().body(apiError);
+        return badRequest().body(new ApiError(ex.getClass().getSimpleName(), ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleException(Exception ex) {
-        ApiError apiError = new ApiError(ex.getClass().getSimpleName(), ex.getMessage());
-        return internalServerError().body(apiError);
+        return internalServerError().body( new ApiError(ex.getClass().getSimpleName(), ex.getMessage()));
     }
 
     @ExceptionHandler(BindException.class)
@@ -40,9 +40,23 @@ public class BaseExceptionHandler {
             return badRequest().body(apiError);
         }
 
-        return badRequest().body("Erro de validação");
+        return badRequest().body(new ApiError("BindException", "Erro de validação"));
     }
 
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<ApiError> handleException(ValidationException ex) {
+        return badRequest().body(new ApiError(ex.getClass().getSimpleName(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiError> handleException(ConstraintViolationException ex) {
+        var violation = ex.getConstraintViolations().stream().findFirst().orElse(null);
+
+        if (violation != null) {
+            return badRequest().body(new ApiError(ex.getClass().getSimpleName(), violation.getMessage()));
+        }
+        return badRequest().body(new ApiError("ConstraintViolationException", "Erro de validação"));
+    }
 
     static record ApiError(String type, String error) { }
 }

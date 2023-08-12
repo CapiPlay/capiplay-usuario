@@ -5,21 +5,23 @@ import br.senai.sc.capiplayusuario.exceptions.CadastroInvalidoException;
 import br.senai.sc.capiplayusuario.exceptions.EmailEmUsoException;
 import br.senai.sc.capiplayusuario.exceptions.UsuarioInexistenteException;
 
+import br.senai.sc.capiplayusuario.infra.messaging.Publisher;
 import br.senai.sc.capiplayusuario.model.dto.EditarUsuarioCommand;
 
 import br.senai.sc.capiplayusuario.model.dto.UsuarioDTO;
 import br.senai.sc.capiplayusuario.model.entity.Usuario;
 import br.senai.sc.capiplayusuario.repository.UsuarioRepository;
+import br.senai.sc.capiplayusuario.usuario.events.UsuarioSalvoEvent;
 import br.senai.sc.capiplayusuario.utils.GeradorUuidUtils;
 
+import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
-
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -35,6 +37,7 @@ import static org.springframework.beans.BeanUtils.copyProperties;
 
 
 @Service
+@Validated
 public class UsuarioService {
 
     @Autowired
@@ -43,11 +46,13 @@ public class UsuarioService {
     @Value("${diretorio-usuario}")
     public String diretorio;
 
+    private Publisher publisher;
 
-    public Usuario salvar(UsuarioDTO usuarioDTO, byte[] bytes) {
+
+    public void salvar(UsuarioDTO usuarioDTO, byte[] bytes) {
         Usuario usuario = new Usuario();
-        usuario.setFoto(salvarFoto(bytes, usuarioDTO.getPerfil()));
-        return criarUsuario(usuarioDTO, usuario);
+
+        criarUsuario(usuarioDTO, usuario, bytes);
     }
 
     public Usuario buscarUm(String id) {
@@ -65,30 +70,42 @@ public class UsuarioService {
         }
     }
 
-    private Usuario criarUsuario(UsuarioDTO usuarioDTO, Usuario usuario) {
+    private void criarUsuario(UsuarioDTO usuarioDTO, Usuario usuario, byte[] bytes) {
+
         if (validaIdade(usuarioDTO.getDataNascimento())) {
             copyProperties(usuarioDTO, usuario);
+
+            if (usuario.getPerfil().isEmpty()) {
+                String email = usuario.getEmail();
+                int indexArroba = email.indexOf('@');
+                String nomePadrao = email.substring(0, indexArroba).trim();
+                usuario.setPerfil(nomePadrao(nomePadrao, ""));
+            }
+
+            usuario.setFoto(salvarFoto(bytes, usuario.getPerfil()));
             usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
             usuario.setEnabled(true);
             try {
-                return usuarioRepository.save(usuario);
+                usuarioRepository.save(usuario);
             } catch (DataIntegrityViolationException e) {
                 throw new EmailEmUsoException();
             } catch (Exception e) {
                 throw new CadastroInvalidoException();
             }
+//            publisher.publish(new UsuarioSalvoEvent(usuario));
+        } else {
+            throw new CadastroInvalidoException();
         }
-        return null;
     }
 
     public String salvarFoto(byte[] foto, String nome) {
         String uuid = GeradorUuidUtils.gerarUuid();
-        File file = new File(diretorio + uuid + "_foto.png");
+        File file = new File(diretorio + 1 + "_foto.png");
         try (FileOutputStream fos = new FileOutputStream(file)) {
 
             if (foto == null || foto.length == 0) {
                 gerarFotoPadrao(nome, file);
-                return file.getAbsolutePath();
+                return file.getName();
             }
 
             fos.write(foto);
@@ -97,7 +114,7 @@ public class UsuarioService {
 
             if (imagemOriginal == null) {
                 gerarFotoPadrao(nome, file);
-                return file.getAbsolutePath();
+                return file.getName();
             }
 
             int larguraDesejada = 176;
@@ -183,19 +200,16 @@ public class UsuarioService {
         return idade > 6 && idade < 150;
     }
 
+    public void handle(@Valid EditarUsuarioCommand cmd) {
+        Usuario usuario = buscarUm(cmd.getId());
 
-    public Usuario handle(@Valid EditarUsuarioCommand cmd, String id) {
-        Usuario usuario = buscarUm(id);
-
-        if (existePorPerfil(cmd.getPerfil())) {
-            cmd.setPerfil(nomePadrao(cmd.getPerfil(), id));
-        }
-
-        salvarFoto(cmd.getFoto(), cmd.getNome());
+        if (existePorPerfil(cmd.getPerfil()))
+            cmd.setPerfil(nomePadrao(cmd.getPerfil(), cmd.getId()));
 
         copyProperties(cmd, usuario);
 
+        usuario.setFoto(salvarFoto(cmd.getFoto(), cmd.getNome()));
         usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
-        return usuarioRepository.save(usuario);
+        usuarioRepository.save(usuario);
     }
 }

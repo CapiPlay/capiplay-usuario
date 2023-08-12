@@ -8,6 +8,6 @@ import lombok.Data;
 @AllArgsConstructor
 public class UsuarioExcluidoEvent {
 
-    private String uuid;
+    private String identificador;
 
 }
