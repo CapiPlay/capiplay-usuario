@@ -17,7 +17,6 @@ public class Usuario implements UsuarioComentarioProjection, DetalhesUsuarioProj
 
     @Id
     @Column(length = 36)
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String uuid;
 
     @Column(length = 50, nullable = false)

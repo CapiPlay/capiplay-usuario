@@ -82,7 +82,9 @@ public class UsuarioService {
                 usuario.setPerfil(nomePadrao(nomePadrao, ""));
             }
 
-            usuario.setFoto(salvarFoto(bytes, usuario.getPerfil()));
+            String uuid = GeradorUuidUtils.gerarUuid();
+            usuario.setUuid(uuid);
+            usuario.setFoto(salvarFoto(bytes, usuario.getPerfil(), uuid));
             usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
             usuario.setEnabled(true);
             try {
@@ -98,9 +100,8 @@ public class UsuarioService {
         }
     }
 
-    public String salvarFoto(byte[] foto, String nome) {
-        String uuid = GeradorUuidUtils.gerarUuid();
-        File file = new File(diretorio + 1 + "_foto.png");
+    public String salvarFoto(byte[] foto, String nome, String uuid) {
+        File file = new File(diretorio + uuid + "_foto.png");
         try (FileOutputStream fos = new FileOutputStream(file)) {
 
             if (foto == null || foto.length == 0) {
@@ -208,7 +209,7 @@ public class UsuarioService {
 
         copyProperties(cmd, usuario);
 
-        usuario.setFoto(salvarFoto(cmd.getFoto(), cmd.getNome()));
+        usuario.setFoto(salvarFoto(cmd.getFoto(), cmd.getNome(), usuario.getUuid()));
         usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
         usuarioRepository.save(usuario);
     }
