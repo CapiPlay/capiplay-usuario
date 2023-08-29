@@ -31,9 +31,12 @@ public class TokenService {
             Algorithm algorithm = HMAC256(secret);
 
             var jwt = JWT.create().withIssuer("capiplay")
-                    .withExpiresAt(genExpirationDate())
                     .withClaim("usuarioId", id)
                     .withClaim("anonimo", anonimo);
+
+            if (!anonimo) {
+                jwt.withExpiresAt(genExpirationDate());
+            }
 
             return jwt.sign(algorithm);
         } catch (JWTCreationException a) {

@@ -27,18 +27,38 @@ public class RabbitConfig {
     }
 
     @Bean
+    Queue anonimoSalvoEngajamentoQueue() {
+        return new Queue("usuarios.v1.anonimo-salvo.engajamento");
+    }
+
+    @Bean
+    Queue anonimoSalvoVideoQueue() {
+        return new Queue("usuarios.v1.anonimo-salvo.video");
+    }
+
+    @Bean
     Queue usuarioSalvoVideoQueue() {
         return new Queue("usuarios.v1.usuario-salvo.video");
     }
 
     @Bean
-    Binding bindingUsuarioSalvoEngajamento(Queue usuarioSalvoEngajamentoQueue, TopicExchange exchange) {
-        return BindingBuilder.bind(usuarioSalvoEngajamentoQueue).to(exchange).with(UsuarioSalvoEvent.class.getSimpleName());
+    Binding bindingUsuarioSalvoEngajamento() {
+        return BindingBuilder.bind(usuarioSalvoEngajamentoQueue()).to(exchange()).with("UsuarioSalvoEvent");
     }
 
     @Bean
-    Binding bindingUsuarioSalvoVideo(Queue usuarioSalvoVideoQueue, TopicExchange exchange) {
-        return BindingBuilder.bind(usuarioSalvoVideoQueue).to(exchange).with("UsuarioSalvoEvent");
+    Binding bindingUsuarioSalvoVideo() {
+        return BindingBuilder.bind(usuarioSalvoVideoQueue()).to(exchange()).with("UsuarioSalvoEvent");
+    }
+
+    @Bean
+    Binding bindingAnonimoSalvoVideo() {
+        return BindingBuilder.bind(anonimoSalvoVideoQueue()).to(exchange()).with("AnonimoEvent");
+    }
+
+    @Bean
+    Binding bindingAnonimoSalvoEngajamento() {
+        return BindingBuilder.bind(anonimoSalvoEngajamentoQueue()).to(exchange()).with("AnonimoEvent");
     }
 
     @Bean

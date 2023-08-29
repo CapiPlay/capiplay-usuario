@@ -39,7 +39,6 @@ public class BaseExceptionHandler {
             ApiError apiError = new ApiError(ex.getClass().getSimpleName(), fieldError.getDefaultMessage());
             return badRequest().body(apiError);
         }
-
         return badRequest().body(new ApiError("BindException", "Erro de validação"));
     }
 

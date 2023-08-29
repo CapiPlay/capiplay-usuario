@@ -16,6 +16,7 @@ import br.senai.sc.capiplayusuario.utils.GeradorUuidUtils;
 
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -38,6 +39,7 @@ import static org.springframework.beans.BeanUtils.copyProperties;
 
 @Service
 @Validated
+@RequiredArgsConstructor
 public class UsuarioService {
 
     @Autowired
@@ -46,7 +48,7 @@ public class UsuarioService {
     @Value("${diretorio-usuario}")
     public String diretorio;
 
-    private Publisher publisher;
+    private final Publisher publisher;
 
 
     public void salvar(UsuarioDTO usuarioDTO, byte[] bytes) {
@@ -94,7 +96,7 @@ public class UsuarioService {
             } catch (Exception e) {
                 throw new CadastroInvalidoException();
             }
-//            publisher.publish(new UsuarioSalvoEvent(usuario));
+            publisher.publish(new UsuarioSalvoEvent(usuario));
         } else {
             throw new CadastroInvalidoException();
         }
@@ -212,5 +214,6 @@ public class UsuarioService {
         usuario.setFoto(salvarFoto(cmd.getFoto(), cmd.getNome(), usuario.getUuid()));
         usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
         usuarioRepository.save(usuario);
+        publisher.publish(new UsuarioSalvoEvent(usuario));
     }
 }

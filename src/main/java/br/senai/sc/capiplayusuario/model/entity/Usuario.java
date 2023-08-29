@@ -35,7 +35,11 @@ public class Usuario implements UsuarioComentarioProjection, DetalhesUsuarioProj
 
     @Column(nullable = false)
     private Date dataNascimento;
+
     private boolean isEnabled;
+
+    @Column(length = 250)
+    private String descricao = "Olá! Estou usando o Capiplay!";
 
     public Usuario() {
         this.uuid = GeradorUuidUtils.gerarUuid();

@@ -1,5 +1,7 @@
 package br.senai.sc.capiplayusuario.infra.messaging;
 
+import br.senai.sc.capiplayusuario.usuario.events.AnonimoEvent;
+import br.senai.sc.capiplayusuario.usuario.events.UsuarioSalvoEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;

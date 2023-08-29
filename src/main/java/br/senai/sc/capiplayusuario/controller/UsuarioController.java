@@ -8,6 +8,7 @@ import br.senai.sc.capiplayusuario.model.entity.Usuario;
 import br.senai.sc.capiplayusuario.security.TokenService;
 import br.senai.sc.capiplayusuario.service.EmailSenderService;
 import br.senai.sc.capiplayusuario.service.UsuarioService;
+import br.senai.sc.capiplayusuario.usuario.events.AnonimoEvent;
 import br.senai.sc.capiplayusuario.usuario.events.UsuarioSalvoEvent;
 import br.senai.sc.capiplayusuario.usuario.projections.DetalhesUsuarioProjection;
 import com.rabbitmq.client.Return;
@@ -15,6 +16,7 @@ import jakarta.validation.Valid;
 
 import lombok.AllArgsConstructor;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +35,7 @@ import java.util.UUID;
 import static org.springframework.http.ResponseEntity.created;
 import static org.springframework.http.ResponseEntity.ok;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/usuario")
 @CrossOrigin(origins = "*")
@@ -67,7 +70,7 @@ public class UsuarioController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginDTO loginDTO) {
+    public ResponseEntity<String> login(@RequestBody @Valid LoginDTO loginDTO) {
         var usernamePassword = new UsernamePasswordAuthenticationToken
                 (loginDTO.email(), loginDTO.senha());
 
@@ -133,10 +136,14 @@ public class UsuarioController {
 
     @PostMapping("/anonimo")
     public ResponseEntity<String> anonimo() {
-        return ResponseEntity.status(HttpStatus.OK).body(
-                tokenService.generateToken(
-                        UUID.randomUUID().toString(), true
-                )
+
+        log.debug("anonimo");
+        String uuid = UUID.randomUUID().toString();
+        String token = tokenService.generateToken(
+                uuid, true
         );
+        this.publisher.publish(new AnonimoEvent(uuid));
+
+        return ResponseEntity.status(HttpStatus.OK).body(token);
     }
 }

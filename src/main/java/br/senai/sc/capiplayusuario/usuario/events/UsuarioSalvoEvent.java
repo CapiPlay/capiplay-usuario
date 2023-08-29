@@ -17,11 +17,18 @@ public class UsuarioSalvoEvent {
 
     private String perfil;
 
+    private String descricao;
+
     public UsuarioSalvoEvent(Usuario usuario) {
         this.id = usuario.getUuid();
         this.nome = usuario.getNome();
         this.foto = usuario.getFoto();
         this.perfil = usuario.getPerfil();
+        this.descricao = usuario.getDescricao();
+    }
+
+    public UsuarioSalvoEvent(String id) {
+        this.id = id;
     }
 
 }
