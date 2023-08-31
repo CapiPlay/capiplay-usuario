@@ -137,7 +137,6 @@ public class UsuarioController {
     @PostMapping("/anonimo")
     public ResponseEntity<String> anonimo() {
 
-        log.debug("anonimo");
         String uuid = UUID.randomUUID().toString();
         String token = tokenService.generateToken(
                 uuid, true
