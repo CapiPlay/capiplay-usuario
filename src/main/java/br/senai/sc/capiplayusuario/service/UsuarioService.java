@@ -3,6 +3,7 @@ package br.senai.sc.capiplayusuario.service;
 
 import br.senai.sc.capiplayusuario.exceptions.CadastroInvalidoException;
 import br.senai.sc.capiplayusuario.exceptions.EmailEmUsoException;
+import br.senai.sc.capiplayusuario.exceptions.PerfilEmUsoException;
 import br.senai.sc.capiplayusuario.exceptions.UsuarioInexistenteException;
 
 import br.senai.sc.capiplayusuario.infra.messaging.Publisher;
@@ -92,7 +93,12 @@ public class UsuarioService {
             try {
                 usuarioRepository.save(usuario);
             } catch (DataIntegrityViolationException e) {
-                throw new EmailEmUsoException();
+                System.out.println(e.getMessage());
+                if (e.getMessage().contains(".com")){
+                    throw new EmailEmUsoException();
+                } else {
+                    throw new PerfilEmUsoException();
+                }
             } catch (Exception e) {
                 throw new CadastroInvalidoException();
             }
