@@ -19,16 +19,16 @@ public class EditarUsuarioCommand {
 
     private String id;
 
-    @NotBlank(message = "O nome não pode ser vazio")
+//    @NotBlank(message = "O nome não pode ser vazio")
     @Size(max = 50, message = "Nome execede o tamanho máximo")
     private String nome;
 
     @Size(max = 20, message = "Apelido execede o tamanho máximo")
     private String perfil;
 
-    @NotBlank(message = "A senha não pode ser vazia")
-    @Size(max = 20, min = 6, message = "Senha deve conter entre 6 a 20 caracteres")
-    @SenhaForte
+//    @NotBlank(message = "A senha não pode ser vazia")
+//    @Size(max = 20, min = 6, message = "Senha deve conter entre 6 a 20 caracteres")
+//    @SenhaForte
     private String senha;
 
     @Size(max = 250, message = "Descrição excede o tamanho máximo")

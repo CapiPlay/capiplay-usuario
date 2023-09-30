@@ -35,6 +35,10 @@ import java.util.*;
 import java.util.List;
 import java.util.Random;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+import static org.apache.logging.log4j.util.Strings.isNotBlank;
+import static org.apache.logging.log4j.util.Strings.isNotEmpty;
 import static org.springframework.beans.BeanUtils.copyProperties;
 
 
@@ -210,15 +214,30 @@ public class UsuarioService {
     }
 
     public void handle(@Valid EditarUsuarioCommand cmd) {
-        Usuario usuario = buscarUm(cmd.getId());
+        var usuario = buscarUm(cmd.getId());
 
         if (existePorPerfil(cmd.getPerfil()))
-            cmd.setPerfil(nomePadrao(cmd.getPerfil(), cmd.getId()));
+            usuario.setPerfil(nomePadrao(cmd.getPerfil(), cmd.getId()));
 
-        copyProperties(cmd, usuario);
+        if (isNotBlank(cmd.getSenha())){
+            usuario.setSenha(new BCryptPasswordEncoder().encode(cmd.getSenha()));
+        }
+
+        if (isNotBlank(cmd.getDescricao())){
+            usuario.setDescricao(cmd.getDescricao());
+        }
+
+        if (isNotBlank(cmd.getNome())){
+            usuario.setNome(cmd.getNome());
+        }
+
+        if (isNotBlank(cmd.getPerfil())){
+            usuario.setPerfil(cmd.getPerfil());
+        }
+
+//        copyProperties(cmd, usuario);
 
         usuario.setFoto(salvarFoto(cmd.getFoto(), cmd.getNome(), usuario.getUuid()));
-        usuario.setSenha(new BCryptPasswordEncoder().encode(usuario.getSenha()));
         usuarioRepository.save(usuario);
         publisher.publish(new UsuarioSalvoEvent(usuario));
     }

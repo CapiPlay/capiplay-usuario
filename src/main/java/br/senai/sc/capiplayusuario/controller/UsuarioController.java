@@ -23,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -83,43 +84,6 @@ public class UsuarioController {
     public ResponseEntity<DetalhesUsuarioProjection> detalhe(@RequestHeader String usuarioId) {
         return ResponseEntity.status(HttpStatus.OK).body(service.buscarUm(usuarioId));
     }
-
-//    @GetMapping("/verifyEmail/{uuid}")
-//    public ResponseEntity<Resource> verifyEmail(@PathVariable String uuid){
-//        try {
-//            System.out.println(uuid);
-//            for (Usuario u:service.buscarTodos()) {
-//                if (u.getUuid().equals(uuid)){
-//                    u.setEnabled(true);
-//                    service.alterarCampos(u);
-//                } else {
-//                    return ResponseEntity.notFound().build();
-//                }
-//            }
-//            Resource resource = resourceLoader.getResource("classpath:static/verify.html");
-//            if (resource.exists()) {
-//                return ResponseEntity.ok(resource);
-//            } else {
-//                return ResponseEntity.notFound().build();
-//            }
-//        } catch (Exception e) {
-//            return ResponseEntity.status(500).build();
-//        }
-//    }
-
-
-//    @PutMapping
-//    public ResponseEntity<Boolean> editar(@RequestHeader String usuarioId,
-//                                          @ModelAttribute @Valid UsuarioEditDTO usuarioDTO,
-//                                          @RequestParam(name="foto1", required = false) MultipartFile multipartFile) throws IOException {
-//
-//
-//        usuarioDTO.setFoto(service.salvarFoto(multipartFile.getBytes(), usuarioDTO.getPerfil()));
-//        if (service.editar(usuarioDTO, usuarioId)) {
-//            return ResponseEntity.status(HttpStatus.OK).body(true);
-//        }
-//        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
-//    }
 
     @PutMapping
     public void editar(@RequestHeader("usuarioId") String usuarioId,
