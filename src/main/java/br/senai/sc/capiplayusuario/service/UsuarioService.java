@@ -237,7 +237,9 @@ public class UsuarioService {
 
 //        copyProperties(cmd, usuario);
 
-        usuario.setFoto(salvarFoto(cmd.getFoto(), cmd.getNome(), usuario.getUuid()));
+        if(cmd.getFoto() != null && cmd.getFoto().length > 0)
+            usuario.setFoto(salvarFoto(cmd.getFoto(), cmd.getNome(), usuario.getUuid()));
+
         usuarioRepository.save(usuario);
         publisher.publish(new UsuarioSalvoEvent(usuario));
     }
